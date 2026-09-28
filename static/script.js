@@ -137,7 +137,16 @@
     const orig = exportPdfBtn.innerHTML;
     exportPdfBtn.textContent = 'Gerando...';
     exportPdfBtn.disabled = true;
-    html2canvas(agendaDoc, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+        html2canvas(agendaDoc, { 
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: '#ffffff',
+      onclone: (clonedDoc) => {
+        const clonedEl = clonedDoc.getElementById('agendaDoc');
+        clonedEl.style.width = '794px';
+        clonedEl.style.maxWidth = 'none';
+      }
+    }).then(canvas => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
       const pdfW = pdf.internal.pageSize.getWidth();
@@ -151,7 +160,16 @@
     const orig = exportPngBtn.innerHTML;
     exportPngBtn.textContent = 'Gerando...';
     exportPngBtn.disabled = true;
-    html2canvas(agendaDoc, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+        html2canvas(agendaDoc, { 
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: '#ffffff',
+      onclone: (clonedDoc) => {
+        const clonedEl = clonedDoc.getElementById('agendaDoc');
+        clonedEl.style.width = '794px';
+        clonedEl.style.maxWidth = 'none';
+      }
+    }).then(canvas => {
       const link = document.createElement('a');
       link.download = 'agenda-integracao.png';
       link.href = canvas.toDataURL('image/png');
