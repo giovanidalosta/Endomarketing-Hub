@@ -141,10 +141,17 @@
       scale: 2, 
       useCORS: true, 
       backgroundColor: '#ffffff',
+      width: 794,
+      windowWidth: 794,
       onclone: (clonedDoc) => {
         const clonedEl = clonedDoc.getElementById('agendaDoc');
         clonedEl.style.width = '794px';
         clonedEl.style.maxWidth = 'none';
+        if (clonedEl.parentElement) {
+           clonedEl.parentElement.style.width = '794px';
+           clonedEl.parentElement.style.maxWidth = 'none';
+           clonedEl.parentElement.style.padding = '0';
+        }
       }
     }).then(canvas => {
       const imgData = canvas.toDataURL('image/png');
@@ -164,10 +171,17 @@
       scale: 2, 
       useCORS: true, 
       backgroundColor: '#ffffff',
+      width: 794,
+      windowWidth: 794,
       onclone: (clonedDoc) => {
         const clonedEl = clonedDoc.getElementById('agendaDoc');
         clonedEl.style.width = '794px';
         clonedEl.style.maxWidth = 'none';
+        if (clonedEl.parentElement) {
+           clonedEl.parentElement.style.width = '794px';
+           clonedEl.parentElement.style.maxWidth = 'none';
+           clonedEl.parentElement.style.padding = '0';
+        }
       }
     }).then(canvas => {
       const link = document.createElement('a');
