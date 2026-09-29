@@ -1,4 +1,4 @@
-﻿import os
+import os
 import io
 from io import BytesIO
 from datetime import datetime
@@ -318,6 +318,30 @@ def api_certificado():
 # ---------------------------------------------------------
 # INTERFACE PRINCIPAL
 # ---------------------------------------------------------
+
+import json
+
+CONFIG_FILE = os.path.join(ASSETS_DIR, 'certificado_config.json')
+
+def load_certificado_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {
+        "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"},
+        "cert-curso-txt": {"top": "500px", "left": "480px"},
+        "cert-carga-txt": {"top": "680px", "left": "480px"},
+        "cert-data-txt": {"top": "680px", "left": "930px"}
+    }
+
+@app.route('/api/certificado-config', methods=['GET', 'POST'])
+def api_certificado_config():
+    if request.method == 'POST':
+        data = request.json
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f)
+        return jsonify(success=True)
+    return jsonify(load_certificado_config())
 
 @app.route('/')
 def index():

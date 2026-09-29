@@ -64,6 +64,26 @@ document.addEventListener("DOMContentLoaded", () => {
         'data': document.getElementById('cert-data-txt')
     };
 
+    let defaultConfig = {};
+    fetch('/api/certificado-config')
+        .then(res => res.json())
+        .then(config => {
+            defaultConfig = config;
+            Object.keys(texts).forEach(key => {
+                const el = texts[key];
+                const conf = defaultConfig[el.id];
+                if (conf) {
+                    el.style.top = conf.top;
+                    el.style.left = conf.left;
+                    if (conf.transform) {
+                        el.style.transform = conf.transform;
+                    } else {
+                        el.style.transform = 'none';
+                    }
+                }
+            });
+        });
+
     Object.keys(inputs).forEach(key => {
         const inp = inputs[key];
         if (inp) {
@@ -71,8 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 texts[key].textContent = inp.value || texts[key].getAttribute('data-placeholder');
                 // If it's nome, keep it centered horizontally if user hasn't moved it
                 if (key === 'nome' && !texts['nome'].dataset.moved) {
-                    texts['nome'].style.transform = 'translateX(-50%)';
-                    texts['nome'].style.left = 'calc(50% + 60px)';
+                    const conf = defaultConfig['cert-nome-txt'];
+                    if (conf) {
+                        texts['nome'].style.transform = conf.transform || 'none';
+                        texts['nome'].style.left = conf.left;
+                    }
                 }
             });
             // store placeholder
@@ -292,15 +315,39 @@ document.addEventListener("DOMContentLoaded", () => {
             if (historyStack.length > 50) historyStack.shift();
 
             document.querySelectorAll('.draggable-text').forEach(el => {
-                el.removeAttribute('style');
                 delete el.dataset.moved;
+                const conf = defaultConfig[el.id];
+                if (conf) {
+                    el.style.top = conf.top;
+                    el.style.left = conf.left;
+                    el.style.transform = conf.transform || 'none';
+                }
             });
-            
-            // Re-apply center transform for the name text if it has a value, to match initial state
-            if (texts['nome'] && !texts['nome'].dataset.moved) {
-                texts['nome'].style.transform = 'translateX(-50%)';
-                texts['nome'].style.left = 'calc(50% + 60px)';
-            }
+        };
+    }
+
+    const saveDefaultBtn = document.getElementById('save-default-certificado');
+    if (saveDefaultBtn) {
+        saveDefaultBtn.style.display = 'inline-block';
+        saveDefaultBtn.onclick = () => {
+            const newConfig = {};
+            document.querySelectorAll('.draggable-text').forEach(el => {
+                newConfig[el.id] = {
+                    top: el.style.top || window.getComputedStyle(el).top,
+                    left: el.style.left || window.getComputedStyle(el).left,
+                    transform: el.style.transform !== 'none' ? el.style.transform : ''
+                };
+            });
+            saveDefaultBtn.textContent = 'Salvando...';
+            fetch('/api/certificado-config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(newConfig)
+            }).then(() => {
+                defaultConfig = newConfig;
+                saveDefaultBtn.textContent = 'Padrão Salvo!';
+                setTimeout(() => saveDefaultBtn.textContent = 'Salvar como Padrão', 2000);
+            });
         };
     }
 });
