@@ -282,10 +282,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     let isEditMode = false;
-    const toggleEdit = document.getElementById('toggle-edit-mode');
-    if (toggleEdit) {
-        toggleEdit.addEventListener('change', (e) => {
-            isEditMode = e.target.checked;
+    const btnToggleEdit = document.getElementById('btn-toggle-edit');
+    if (btnToggleEdit) {
+        btnToggleEdit.addEventListener('click', () => {
+            isEditMode = !isEditMode;
+            if (isEditMode) {
+                btnToggleEdit.textContent = 'Concluir Edição';
+                btnToggleEdit.style.background = 'var(--c-primary)';
+                btnToggleEdit.style.color = 'white';
+                btnToggleEdit.style.borderColor = 'var(--c-primary)';
+            } else {
+                btnToggleEdit.textContent = 'Modo Edição';
+                btnToggleEdit.style.background = 'transparent';
+                btnToggleEdit.style.color = 'var(--c-fg)';
+                btnToggleEdit.style.borderColor = 'var(--c-fg)';
+            }
             applyEditMode();
         });
     }

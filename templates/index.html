@@ -175,14 +175,6 @@
     <!-- COL 3: Painel de Pré-visualização -->
     <section class="panel panel--preview" id="previews-container" style="position: relative;">
       
-      <!-- TOGGLE EDIT MODE -->
-      <div style="position: absolute; top: 20px; right: 20px; z-index: 999; display: flex; align-items: center; gap: 10px; background: var(--c-bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--c-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <label style="font-size: 13px; font-weight: bold; color: var(--c-fg); cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" id="toggle-edit-mode">
-          Modo de Edição (Arranjo e Cores)
-        </label>
-      </div>
-      
       <div id="cert-props-panel" style="display: none; position: absolute; top: 70px; right: 20px; background: var(--c-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--c-border); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; width: 220px;">
         <div style="font-size: 13px; font-weight: bold; margin-bottom: 12px; color: var(--c-fg);">Propriedades do Texto</div>
         
@@ -250,11 +242,12 @@
         <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
           <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <div class="panel__title panel__title--preview" style="margin-bottom: 0;">Pré-visualização Certificado</div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; align-items: center;">
               <input type="file" id="upload-bg-certificado" accept="image/png, image/jpeg" style="display: none;">
               <button type="button" id="btn-upload-bg" class="btn" style="display: none; background: transparent; border: 1px solid var(--c-primary); color: var(--c-primary);">Trocar Fundo</button>
               <button type="button" id="save-default-certificado" class="btn" style="display: none; background: transparent; border: 1px solid var(--c-primary); color: var(--c-primary);">Salvar como Padrão</button>
               <button type="button" id="reset-certificado" class="btn" style="display: none; background: transparent; border: 1px solid var(--c-border); color: var(--c-fg);">Redefinir posições</button>
+              <button type="button" id="btn-toggle-edit" class="btn" style="background: transparent; border: 1px solid var(--c-fg); color: var(--c-fg);">Modo Edição</button>
               <button type="button" id="export-certificado" class="btn btn--primary" disabled>Exportar PNG</button>
           </div>
         </div>
