@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Modify the preview HTML for the Certificate
     const renderCert = document.getElementById('render-certificado');
     if (!renderCert) return;
+    
+    renderCert.style.display = 'block';
 
     // Build the canvas
     renderCert.innerHTML = `
