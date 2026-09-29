@@ -90,22 +90,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const newText = document.createElement('div');
         newText.className = 'draggable-text cert-custom-field';
         newText.id = divId;
-        newText.textContent = label;
         newText.setAttribute('data-label', label);
         if (conf) {
             newText.style.top = conf.top;
             newText.style.left = conf.left;
             newText.style.transform = conf.transform || 'none';
+            if (conf.color) newText.style.color = conf.color;
+            if (conf.fontSize) newText.style.fontSize = conf.fontSize;
+            if (conf.showLabel) newText.dataset.showLabel = conf.showLabel;
         } else {
             newText.style.top = '400px';
             newText.style.left = '400px';
+            newText.style.fontSize = '50px'; // default
         }
+        
+        // This will render it correctly based on datasets
+        updateTextHtml(newText, label);
+        
         if (canvasEl) canvasEl.appendChild(newText);
         
         const inp = document.getElementById(`input-${fieldId}`);
         if (inp) {
             inp.addEventListener('input', () => {
-                newText.textContent = inp.value || label;
+                updateTextHtml(newText, inp.value || label);
             });
         }
     }
@@ -130,6 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         el.style.top = conf.top;
                         el.style.left = conf.left;
                         el.style.transform = conf.transform || 'none';
+                        if (conf.color) el.style.color = conf.color;
+                        if (conf.fontSize) el.style.fontSize = conf.fontSize;
+                        if (conf.showLabel) el.dataset.showLabel = conf.showLabel;
+                        
+                        // Re-render HTML with new properties
+                        updateTextHtml(el);
                     }
                 });
                 
@@ -146,11 +159,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadConfigForModel();
 
+    function updateTextHtml(el, val) {
+        if (val !== undefined) {
+            el.setAttribute('data-value', val);
+        } else {
+            val = el.getAttribute('data-value') || el.getAttribute('data-placeholder') || el.getAttribute('data-label') || '';
+        }
+        
+        const label = el.getAttribute('data-label') || 'CAMPO';
+        const showLabel = el.dataset.showLabel === 'true';
+        
+        if (showLabel) {
+            el.innerHTML = `<span style="display:block; font-size:40%; color:#08CFFF; text-transform:uppercase; margin-bottom: 5px; font-weight: bold; font-family: 'Exo-Regular', sans-serif;">${label}</span><span>${val}</span>`;
+        } else {
+            el.textContent = val;
+        }
+    }
+
     Object.keys(inputs).forEach(key => {
         const inp = inputs[key];
         if (inp) {
+            // Give standard elements a data-label based on their initial content
+            texts[key].setAttribute('data-label', texts[key].textContent);
+            texts[key].setAttribute('data-placeholder', texts[key].textContent);
+            texts[key].setAttribute('data-value', texts[key].textContent);
+            
             inp.addEventListener('input', () => {
-                texts[key].textContent = inp.value || texts[key].getAttribute('data-placeholder');
+                updateTextHtml(texts[key], inp.value || texts[key].getAttribute('data-placeholder'));
+                
                 // If it's nome, keep it centered horizontally if user hasn't moved it
                 if (key === 'nome' && !texts['nome'].dataset.moved) {
                     const conf = defaultConfig['cert-nome-txt'];
@@ -160,8 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             });
-            // store placeholder
-            texts[key].setAttribute('data-placeholder', texts[key].textContent);
         }
     });
     
@@ -323,6 +357,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 left: el.style.left || '',
                 top: el.style.top || '',
                 transform: el.style.transform || '',
+                color: el.style.color || '',
+                fontSize: el.style.fontSize || '',
+                showLabel: el.dataset.showLabel || '',
                 moved: el.dataset.moved || ''
             };
         });
@@ -342,17 +379,75 @@ document.addEventListener("DOMContentLoaded", () => {
                         el.style.left = saved.left;
                         el.style.top = saved.top;
                         el.style.transform = saved.transform;
+                        el.style.color = saved.color;
+                        el.style.fontSize = saved.fontSize;
+                        if (saved.showLabel) el.dataset.showLabel = saved.showLabel;
+                        else delete el.dataset.showLabel;
                         if (saved.moved) el.dataset.moved = saved.moved;
                         else delete el.dataset.moved;
+                        
+                        updateTextHtml(el);
                     }
                 });
             }
         }
     });
 
+    const propsPanel = document.getElementById('cert-props-panel');
+    const inputColor = document.getElementById('prop-color');
+    const inputSize = document.getElementById('prop-size');
+    const inputShowLabel = document.getElementById('prop-show-label');
+    let activePropsEl = null;
+
+    if (inputColor && inputSize && inputShowLabel) {
+        inputColor.addEventListener('input', (e) => {
+            if (activePropsEl) activePropsEl.style.color = e.target.value;
+        });
+        inputSize.addEventListener('input', (e) => {
+            if (activePropsEl) activePropsEl.style.fontSize = e.target.value + 'px';
+        });
+        inputShowLabel.addEventListener('change', (e) => {
+            if (activePropsEl) {
+                activePropsEl.dataset.showLabel = e.target.checked ? 'true' : 'false';
+                updateTextHtml(activePropsEl);
+            }
+        });
+    }
+
     document.addEventListener('mousedown', (e) => {
+        const isPanelClick = e.target.closest('#cert-props-panel');
         const el = e.target.closest('.draggable-text');
-        if (!el) return;
+        
+        if (!el && !isPanelClick) {
+            if (propsPanel) propsPanel.style.display = 'none';
+            activePropsEl = null;
+            return;
+        }
+        
+        if (isPanelClick) return; // let interactions with panel happen
+        
+        // Element clicked, populate and show panel
+        activePropsEl = el;
+        if (propsPanel) {
+            propsPanel.style.display = 'block';
+            
+            // Populate color
+            // getComputedStyle returns rgb(255, 255, 255), so we must convert or just use el.style.color if it's hex, but it might not be.
+            // Let's use a quick helper to convert rgb to hex if needed
+            let color = window.getComputedStyle(el).color;
+            if (color.startsWith('rgb')) {
+                const rgb = color.match(/\d+/g);
+                color = `#${Number(rgb[0]).toString(16).padStart(2, '0')}${Number(rgb[1]).toString(16).padStart(2, '0')}${Number(rgb[2]).toString(16).padStart(2, '0')}`;
+            }
+            inputColor.value = color;
+            
+            // Populate size
+            let size = window.getComputedStyle(el).fontSize;
+            inputSize.value = parseInt(size) || 50;
+            
+            // Populate show label
+            inputShowLabel.checked = el.dataset.showLabel === 'true';
+        }
         
         historyStack.push(captureState());
         if (historyStack.length > 50) historyStack.shift();
@@ -554,7 +649,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const confObj = {
                     top: el.style.top || window.getComputedStyle(el).top,
                     left: el.style.left || window.getComputedStyle(el).left,
-                    transform: el.style.transform !== 'none' ? el.style.transform : ''
+                    transform: el.style.transform !== 'none' ? el.style.transform : '',
+                    color: el.style.color || window.getComputedStyle(el).color,
+                    fontSize: el.style.fontSize || window.getComputedStyle(el).fontSize,
+                    showLabel: el.dataset.showLabel === 'true'
                 };
                 if (el.classList.contains('cert-custom-field')) {
                     confObj.label = el.getAttribute('data-label');

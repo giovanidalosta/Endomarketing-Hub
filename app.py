@@ -274,32 +274,55 @@ def desenhar_texto(draw, conf, texto, bbox_w=1000):
     try:
         top_str = conf.get("top", "0").replace("px", "")
         left_str = conf.get("left", "0").replace("px", "")
+        color_str = conf.get("color", "white")
+        font_size_str = str(conf.get("fontSize", "")).replace("px", "")
+        show_label = conf.get("showLabel", False)
+        label_text = conf.get("label", "CAMPO").upper()
         
-        # very naive parser to match the CSS positions back to Pillow
-        y = float(top_str) - 40 # undoing the visual +40px adjustment
+        y = float(top_str) - 40
         
-        # handle left calc(50% + 60px)
         is_center = False
         if "50%" in left_str or "translateX(-50%)" in conf.get("transform", ""):
             is_center = True
             
-        font = load_font("Exo-Regular.ttf", 105 if is_center else 50)
+        font_size = 50
+        if font_size_str:
+            try:
+                font_size = int(float(font_size_str))
+            except:
+                pass
+        elif is_center:
+            font_size = 105
+            
+        font = load_font("Exo-Regular.ttf", font_size)
+        label_font = load_font("Exo-Regular.ttf", int(font_size * 0.4))
         
         if is_center:
-            # draw centered at X (1684 is canvas width)
             bbox = draw.textbbox((0, 0), texto, font=font)
             w_text = bbox[2] - bbox[0]
-            # default manual center adjust in python was +60
             x = ((1684 - w_text) / 2) + 60
-            draw.text((x, y), texto, fill="white", font=font)
+            
+            if show_label:
+                label_bbox = draw.textbbox((0, 0), label_text, font=label_font)
+                label_w = label_bbox[2] - label_bbox[0]
+                label_x = ((1684 - label_w) / 2) + 60
+                draw.text((label_x, y), label_text, fill="#08CFFF", font=label_font)
+                y += (font_size * 0.4) + 15
+                
+            draw.text((x, y), texto, fill=color_str, font=font)
         else:
             try:
                 x = float(left_str)
             except:
                 x = 480
+                
+            if show_label:
+                draw.text((x, y), label_text, fill="#08CFFF", font=label_font)
+                y += (font_size * 0.4) + 15
+                
             linhas = quebra_texto_bbox(draw, font, texto, bbox_w)
             for i, linha in enumerate(linhas):
-                draw.text((x, y + (i * 50)), linha, fill="white", font=font)
+                draw.text((x, y + (i * font_size * 1.2)), linha, fill=color_str, font=font)
                 
     except Exception as e:
         print(f"Error drawing {texto}: {e}")
