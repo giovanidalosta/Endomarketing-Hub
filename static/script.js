@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
   let debounceTimers = {};
   let currentBlobData = {};
 
@@ -255,7 +255,6 @@
   const cardapioEditor = document.getElementById('cardapio-editor');
   const cardapioPeriodo = document.getElementById('cardapio-periodo');
   const cardapioDiasContainer = document.getElementById('cardapio-dias-container');
-  const cardapioDiffere = document.getElementById('cardapio-differe');
 
   let cardapioData = null; 
 
@@ -276,7 +275,6 @@
         cardapioData = await response.json();
         
         cardapioPeriodo.value = cardapioData.periodo || '';
-        cardapioDiffere.value = cardapioData.differe || '';
         
         let html = '';
         const diaNomes = {'segunda': 'Segunda-feira', 'terca': 'Terça-feira', 'quarta': 'Quarta-feira', 'quinta': 'Quinta-feira', 'sexta': 'Sexta-feira'};
@@ -290,21 +288,27 @@
                 <input type="text" class="cardapio-evento" data-index="${i}" value="${dia.evento}" />
               </div>
               <div class="field">
-                <label>Prato 1</label>
+                <label>De casa 1</label>
                 <input type="text" class="cardapio-prato" data-index="${i}" data-p="0" value="${dia.pratos[0]}" />
               </div>
               <div class="field">
-                <label>Prato 2</label>
+                <label>De casa 2</label>
                 <input type="text" class="cardapio-prato" data-index="${i}" data-p="1" value="${dia.pratos[1]}" />
               </div>
               <div class="field">
-                <label>Prato 3</label>
+                <label>Acompanhamento</label>
                 <input type="text" class="cardapio-prato" data-index="${i}" data-p="2" value="${dia.pratos[2]}" />
               </div>
               <div class="field">
-                <label>Prato 4</label>
+                <label>Levíssimo</label>
                 <input type="text" class="cardapio-prato" data-index="${i}" data-p="3" value="${dia.pratos[3]}" />
               </div>
+              ${dia.dia === 'sexta' ? `
+              <div class="divider"></div>
+              <div class="field">
+                <label>Opções de Sexta (Differe)</label>
+                <textarea id="cardapio-differe" rows="3">${cardapioData.differe || ''}</textarea>
+              </div>` : ''}
             </div>
           `;
         });
@@ -359,7 +363,8 @@
       let response;
       if (toolName === 'cardapio' && cardapioData) {
         cardapioData.periodo = cardapioPeriodo.value;
-        cardapioData.differe = cardapioDiffere.value;
+        const differeEl = document.getElementById('cardapio-differe');
+        cardapioData.differe = differeEl ? differeEl.value : '';
         
         cardapioEditor.querySelectorAll('.cardapio-evento').forEach(el => {
           cardapioData.dias[el.dataset.index].evento = el.value;
