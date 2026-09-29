@@ -262,6 +262,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (clonedWorkspace) {
                         clonedWorkspace.style.overflow = 'visible';
                         clonedWorkspace.style.padding = '0';
+                        clonedWorkspace.style.margin = '0';
+                        clonedWorkspace.style.display = 'block';
+                    }
+                    const clonedCanvas = clonedDoc.getElementById('cert-canvas');
+                    if (clonedCanvas) {
+                        clonedCanvas.style.boxShadow = 'none';
+                        clonedCanvas.style.margin = '0';
                     }
                 }
             }).then(canvas => {

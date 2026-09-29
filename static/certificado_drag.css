@@ -73,22 +73,22 @@
 
 #cert-nome-txt {
     font-size: 105px;
-    top: 270px;
+    top: 310px;
     left: calc(50% + 60px);
     transform: translateX(-50%);
 }
 #cert-curso-txt {
     font-size: 42px;
-    top: 470px;
+    top: 500px;
     left: 480px;
 }
 #cert-carga-txt {
     font-size: 50px;
-    top: 650px;
+    top: 680px;
     left: 480px;
 }
 #cert-data-txt {
     font-size: 50px;
-    top: 650px;
+    top: 680px;
     left: 930px;
 }
