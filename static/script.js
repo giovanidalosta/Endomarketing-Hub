@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${dia.dia === 'sexta' ? `
               <div class="divider"></div>
               <div class="field">
-                <label>Opções de Sexta (Differe)</label>
+                <label>Differe</label>
                 <textarea id="cardapio-differe" rows="3">${cardapioData.differe || ''}</textarea>
               </div>` : ''}
             </div>
