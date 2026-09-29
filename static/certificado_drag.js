@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div id="cert-curso-txt" class="draggable-text">Nome do Curso</div>
                     <div id="cert-carga-txt" class="draggable-text">Carga Horária</div>
                     <div id="cert-data-txt" class="draggable-text">Data</div>
+                    <div id="snap-line-x" class="snap-line-x"></div>
+                    <div id="snap-line-y" class="snap-line-y"></div>
                 </div>
             </div>
         </div>
@@ -70,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // If it's nome, keep it centered horizontally if user hasn't moved it
                 if (key === 'nome' && !texts['nome'].dataset.moved) {
                     texts['nome'].style.transform = 'translateX(-50%)';
-                    texts['nome'].style.left = '50%';
+                    texts['nome'].style.left = 'calc(50% + 60px)';
                 }
             });
             // store placeholder
@@ -81,19 +83,79 @@ document.addEventListener("DOMContentLoaded", () => {
     // Make elements draggable
     let activeEl = null;
     let initialX, initialY, startLeft, startTop;
+    let snapTargetsX = [];
+    let snapTargetsY = [];
+    const snapLineX = document.getElementById('snap-line-x');
+    const snapLineY = document.getElementById('snap-line-y');
+    const SNAP_THRESHOLD = 8; // pixels in original scale
+
+    function buildSnapTargets() {
+        snapTargetsX = [1684 / 2]; // Center of canvas
+        snapTargetsY = [1190 / 2]; // Center of canvas
+        
+        document.querySelectorAll('.draggable-text').forEach(el => {
+            if (el === activeEl) return;
+            const rect = el.getBoundingClientRect();
+            const canvasRect = document.getElementById('cert-canvas').getBoundingClientRect();
+            const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
+            
+            const left = (rect.left - canvasRect.left) / scale;
+            const top = (rect.top - canvasRect.top) / scale;
+            const width = rect.width / scale;
+            const height = rect.height / scale;
+            
+            snapTargetsX.push(left, left + width / 2, left + width);
+            snapTargetsY.push(top, top + height / 2, top + height);
+        });
+    }
+
+    let historyStack = [];
+    function captureState() {
+        const state = {};
+        document.querySelectorAll('.draggable-text').forEach(el => {
+            state[el.id] = {
+                left: el.style.left || '',
+                top: el.style.top || '',
+                transform: el.style.transform || '',
+                moved: el.dataset.moved || ''
+            };
+        });
+        return state;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+            // Only undo if not typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+            if (historyStack.length > 0) {
+                const prevState = historyStack.pop();
+                document.querySelectorAll('.draggable-text').forEach(el => {
+                    const saved = prevState[el.id];
+                    if (saved) {
+                        el.style.left = saved.left;
+                        el.style.top = saved.top;
+                        el.style.transform = saved.transform;
+                        if (saved.moved) el.dataset.moved = saved.moved;
+                        else delete el.dataset.moved;
+                    }
+                });
+            }
+        }
+    });
 
     document.querySelectorAll('.draggable-text').forEach(el => {
         el.addEventListener('mousedown', (e) => {
+            historyStack.push(captureState());
+            if (historyStack.length > 50) historyStack.shift();
+
             activeEl = el;
             activeEl.classList.add('dragging');
             
-            // Get the current scale
             const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
-            
             initialX = e.clientX;
             initialY = e.clientY;
             
-            // Remove the transform(-50%) if it's the name so we can drag it properly by left/top
             if (el.id === 'cert-nome-txt' && !el.dataset.moved) {
                 const rect = el.getBoundingClientRect();
                 const canvasRect = document.getElementById('cert-canvas').getBoundingClientRect();
@@ -104,6 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             startLeft = parseFloat(getComputedStyle(el).left);
             startTop = parseFloat(getComputedStyle(el).top);
+            
+            buildSnapTargets();
         });
     });
 
@@ -112,17 +176,59 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
         
-        const dx = (e.clientX - initialX) / scale;
-        const dy = (e.clientY - initialY) / scale;
+        let dx = (e.clientX - initialX) / scale;
+        let dy = (e.clientY - initialY) / scale;
         
-        activeEl.style.left = `${startLeft + dx}px`;
-        activeEl.style.top = `${startTop + dy}px`;
+        let newLeft = startLeft + dx;
+        let newTop = startTop + dy;
+        
+        const rect = activeEl.getBoundingClientRect();
+        const elWidth = rect.width / scale;
+        const elHeight = rect.height / scale;
+        
+        let snappedX = false;
+        let snappedY = false;
+
+        // Check X snaps
+        for (const target of snapTargetsX) {
+            // Check left, center, right of activeEl against target
+            if (Math.abs(newLeft - target) < SNAP_THRESHOLD) { newLeft = target; snappedX = target; break; }
+            if (Math.abs(newLeft + elWidth / 2 - target) < SNAP_THRESHOLD) { newLeft = target - elWidth / 2; snappedX = target; break; }
+            if (Math.abs(newLeft + elWidth - target) < SNAP_THRESHOLD) { newLeft = target - elWidth; snappedX = target; break; }
+        }
+
+        // Check Y snaps
+        for (const target of snapTargetsY) {
+            // Check top, center, bottom of activeEl against target
+            if (Math.abs(newTop - target) < SNAP_THRESHOLD) { newTop = target; snappedY = target; break; }
+            if (Math.abs(newTop + elHeight / 2 - target) < SNAP_THRESHOLD) { newTop = target - elHeight / 2; snappedY = target; break; }
+            if (Math.abs(newTop + elHeight - target) < SNAP_THRESHOLD) { newTop = target - elHeight; snappedY = target; break; }
+        }
+        
+        activeEl.style.left = `${newLeft}px`;
+        activeEl.style.top = `${newTop}px`;
+        
+        if (snappedX !== false) {
+            snapLineX.style.left = `${snappedX}px`;
+            snapLineX.style.display = 'block';
+        } else {
+            snapLineX.style.display = 'none';
+        }
+        
+        if (snappedY !== false) {
+            snapLineY.style.top = `${snappedY}px`;
+            snapLineY.style.display = 'block';
+        } else {
+            snapLineY.style.display = 'none';
+        }
     });
 
     document.addEventListener('mouseup', () => {
         if (activeEl) {
             activeEl.classList.remove('dragging');
             activeEl = null;
+            snapLineX.style.display = 'none';
+            snapLineY.style.display = 'none';
         }
     });
 
@@ -175,6 +281,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (resetBtn) {
         resetBtn.style.display = 'inline-block';
         resetBtn.onclick = () => {
+            historyStack.push(captureState());
+            if (historyStack.length > 50) historyStack.shift();
+
             document.querySelectorAll('.draggable-text').forEach(el => {
                 el.removeAttribute('style');
                 delete el.dataset.moved;
@@ -183,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Re-apply center transform for the name text if it has a value, to match initial state
             if (texts['nome'] && !texts['nome'].dataset.moved) {
                 texts['nome'].style.transform = 'translateX(-50%)';
-                texts['nome'].style.left = '50%';
+                texts['nome'].style.left = 'calc(50% + 60px)';
             }
         };
     }
