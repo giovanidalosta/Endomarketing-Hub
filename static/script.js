@@ -420,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Attach event listeners to all inputs in the forms
-  const pythonForms = ['cardapio', 'ikanews', 'certificado'];
+  const pythonForms = ['cardapio', 'ikanews'];
   pythonForms.forEach(tool => {
     const formEl = document.getElementById(`form-${tool}`);
     if (formEl) {

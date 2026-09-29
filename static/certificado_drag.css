@@ -1,0 +1,77 @@
+@font-face {
+    font-family: 'Exo-Regular';
+    src: url('Exo-Regular.ttf') format('truetype');
+}
+
+.cert-workspace {
+    width: 100%;
+    overflow: auto;
+    background: #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.cert-canvas-wrapper {
+    /* Scale down for viewing, but keep internal dimensions */
+    transform-origin: top center;
+    width: 1684px;
+    height: 1190px;
+    /* We will set scale dynamically in JS based on container width */
+}
+
+.cert-canvas {
+    width: 1684px;
+    height: 1190px;
+    background-image: url('certificado_base.png');
+    background-size: 1684px 1190px;
+    background-repeat: no-repeat;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.draggable-text {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    font-family: 'Exo-Regular', sans-serif;
+    color: white;
+    white-space: nowrap;
+    border: 2px dashed transparent;
+    padding: 5px;
+    /* Transform to center the text around its origin if needed, but absolute top/left is easier */
+}
+
+.draggable-text:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.draggable-text.dragging {
+    border-color: #08CFFF;
+    background: rgba(8, 207, 255, 0.2);
+}
+
+#cert-nome-txt {
+    font-size: 105px;
+    top: 270px;
+    left: 50%;
+    transform: translateX(-50%); /* Centered initially */
+}
+#cert-curso-txt {
+    font-size: 42px;
+    top: 470px;
+    left: 480px;
+}
+#cert-carga-txt {
+    font-size: 50px;
+    top: 650px;
+    left: 480px;
+}
+#cert-data-txt {
+    font-size: 50px;
+    top: 650px;
+    left: 930px;
+}
