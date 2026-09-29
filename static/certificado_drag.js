@@ -132,9 +132,24 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // html2canvas
             html2canvas(canvasEl, {
-                scale: 1, // Already 1684x1190
+                scale: 1, 
                 useCORS: true,
                 backgroundColor: null,
+                width: 1684,
+                height: 1190,
+                windowWidth: 1684,
+                windowHeight: 1190,
+                onclone: (clonedDoc) => {
+                    const clonedWrapper = clonedDoc.getElementById('cert-wrapper');
+                    if (clonedWrapper) {
+                        clonedWrapper.style.transform = 'none';
+                    }
+                    const clonedWorkspace = clonedDoc.getElementById('cert-workspace');
+                    if (clonedWorkspace) {
+                        clonedWorkspace.style.overflow = 'visible';
+                        clonedWorkspace.style.padding = '0';
+                    }
+                }
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Certificado_${inputs['nome'] ? inputs['nome'].value : 'Gerado'}.png`;
