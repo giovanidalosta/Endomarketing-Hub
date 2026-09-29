@@ -169,4 +169,22 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         };
     }
+
+    // Reset positions button
+    const resetBtn = document.getElementById('reset-certificado');
+    if (resetBtn) {
+        resetBtn.style.display = 'inline-block';
+        resetBtn.onclick = () => {
+            document.querySelectorAll('.draggable-text').forEach(el => {
+                el.removeAttribute('style');
+                delete el.dataset.moved;
+            });
+            
+            // Re-apply center transform for the name text if it has a value, to match initial state
+            if (texts['nome'] && !texts['nome'].dataset.moved) {
+                texts['nome'].style.transform = 'translateX(-50%)';
+                texts['nome'].style.left = '50%';
+            }
+        };
+    }
 });
