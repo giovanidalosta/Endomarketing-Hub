@@ -108,25 +108,60 @@
       <!-- CERTIFICADO FORM -->
       <form id="form-certificado" class="tool-form" action="/api/certificado" method="post">
         <div class="panel__title">Dados do Certificado</div>
-        <div class="field">
-          <label>Nome Completo</label>
-          <input type="text" name="nome" required />
+        
+        <div class="field" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--c-border);">
+          <label>Modelo do Certificado</label>
+          <select id="cert-modelo" name="modelo" class="form__input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);">
+            <option value="alura">Alura (Padrão)</option>
+            <option value="ikated">IKATED</option>
+            <option value="generico">Evento Genérico</option>
+          </select>
+
+          <label>Modo de Geração</label>
+          <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="cert_mode" value="unico" checked>
+              Único
+            </label>
+            <label id="lbl-mode-lote" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--c-fg-muted);">
+              <input type="radio" name="cert_mode" value="lote" id="radio-mode-lote" disabled>
+              Em Lote
+            </label>
+          </div>
         </div>
-        <div class="field">
+
+        <div class="field" id="group-nome">
+          <label id="label-nome">Nome Completo</label>
+          <input type="text" name="nome" id="input-nome-unico" placeholder="Ex: Gi do RH" />
+          <textarea name="nomes_lote" id="input-nome-lote" placeholder="Cole a lista de nomes aqui (um por linha)..." rows="5" style="display: none; width: 100%; resize: vertical; padding: 0.5rem; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);"></textarea>
+        </div>
+
+        <!-- ALURA FIELDS -->
+        <div class="field" id="group-curso">
           <label>Curso/Treinamento</label>
-          <input type="text" name="curso" required />
+          <input type="text" name="curso" />
         </div>
-        <div class="form-row">
+        <div class="form-row" id="row-alura">
           <div class="field">
             <label>Carga Horária</label>
-            <input type="text" name="carga" required />
+            <input type="text" name="carga" />
           </div>
           <div class="field">
             <label>Data</label>
-            <input type="text" name="data" required />
+            <input type="text" name="data" />
           </div>
         </div>
-        
+
+        <!-- IKATED FIELDS -->
+        <div class="field" id="group-tema" style="display: none;">
+          <label>Tema</label>
+          <input type="text" name="tema" />
+        </div>
+        <div class="field" id="group-apresentador" style="display: none;">
+          <label>Apresentador(a)</label>
+          <input type="text" name="apresentador" />
+        </div>
+
       </form>
 
     </aside>

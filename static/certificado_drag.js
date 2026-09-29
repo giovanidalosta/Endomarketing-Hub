@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div id="cert-curso-txt" class="draggable-text">Nome do Curso</div>
                     <div id="cert-carga-txt" class="draggable-text">Carga Horária</div>
                     <div id="cert-data-txt" class="draggable-text">Data</div>
+                    <div id="cert-tema-txt" class="draggable-text" style="display: none;">Tema</div>
+                    <div id="cert-apresentador-txt" class="draggable-text" style="display: none;">Apresentador</div>
                     <div id="snap-line-x" class="snap-line-x"></div>
                     <div id="snap-line-y" class="snap-line-y"></div>
                 </div>
@@ -54,35 +56,46 @@ document.addEventListener("DOMContentLoaded", () => {
         'nome': document.querySelector('#form-certificado input[name="nome"]'),
         'curso': document.querySelector('#form-certificado input[name="curso"]'),
         'carga': document.querySelector('#form-certificado input[name="carga"]'),
-        'data': document.querySelector('#form-certificado input[name="data"]')
+        'data': document.querySelector('#form-certificado input[name="data"]'),
+        'tema': document.querySelector('#form-certificado input[name="tema"]'),
+        'apresentador': document.querySelector('#form-certificado input[name="apresentador"]')
     };
 
     const texts = {
         'nome': document.getElementById('cert-nome-txt'),
         'curso': document.getElementById('cert-curso-txt'),
         'carga': document.getElementById('cert-carga-txt'),
-        'data': document.getElementById('cert-data-txt')
+        'data': document.getElementById('cert-data-txt'),
+        'tema': document.getElementById('cert-tema-txt'),
+        'apresentador': document.getElementById('cert-apresentador-txt')
     };
 
     let defaultConfig = {};
-    fetch('/api/certificado-config')
-        .then(res => res.json())
-        .then(config => {
-            defaultConfig = config;
-            Object.keys(texts).forEach(key => {
-                const el = texts[key];
-                const conf = defaultConfig[el.id];
-                if (conf) {
-                    el.style.top = conf.top;
-                    el.style.left = conf.left;
-                    if (conf.transform) {
-                        el.style.transform = conf.transform;
-                    } else {
-                        el.style.transform = 'none';
+    const selModelo = document.getElementById('cert-modelo');
+    const radiosMode = document.querySelectorAll('input[name="cert_mode"]');
+    const lblModeLote = document.getElementById('lbl-mode-lote');
+    const radioLote = document.getElementById('radio-mode-lote');
+    
+    function loadConfigForModel() {
+        const modelo = selModelo ? selModelo.value : 'alura';
+        fetch(`/api/certificado-config?modelo=${modelo}`)
+            .then(res => res.json())
+            .then(config => {
+                defaultConfig = config;
+                Object.keys(texts).forEach(key => {
+                    const el = texts[key];
+                    if (!el) return;
+                    const conf = defaultConfig[el.id];
+                    if (conf) {
+                        el.style.top = conf.top;
+                        el.style.left = conf.left;
+                        el.style.transform = conf.transform || 'none';
                     }
-                }
+                });
             });
-        });
+    }
+
+    loadConfigForModel();
 
     Object.keys(inputs).forEach(key => {
         const inp = inputs[key];
@@ -102,6 +115,98 @@ document.addEventListener("DOMContentLoaded", () => {
             texts[key].setAttribute('data-placeholder', texts[key].textContent);
         }
     });
+    
+    // Inputs/groups
+    const grpNome = document.getElementById('group-nome');
+    const grpCurso = document.getElementById('group-curso');
+    const rowAlura = document.getElementById('row-alura');
+    const grpTema = document.getElementById('group-tema');
+    const grpApres = document.getElementById('group-apresentador');
+    const inputNomeUnico = document.getElementById('input-nome-unico');
+    const inputNomeLote = document.getElementById('input-nome-lote');
+    const lblNome = document.getElementById('label-nome');
+
+    function updateFormState() {
+        const modelo = selModelo.value;
+        const mode = document.querySelector('input[name="cert_mode"]:checked').value;
+        
+        // Handle fields visibility
+        if (modelo === 'alura') {
+            grpCurso.style.display = 'block';
+            rowAlura.style.display = 'flex';
+            grpTema.style.display = 'none';
+            grpApres.style.display = 'none';
+            
+            texts['curso'].style.display = 'block';
+            texts['carga'].style.display = 'block';
+            texts['data'].style.display = 'block';
+            texts['tema'].style.display = 'none';
+            texts['apresentador'].style.display = 'none';
+            
+            radioLote.disabled = true;
+            lblModeLote.style.color = 'var(--c-fg-muted)';
+            if (mode === 'lote') document.querySelector('input[value="unico"]').checked = true;
+        } else if (modelo === 'ikated') {
+            grpCurso.style.display = 'none';
+            rowAlura.style.display = 'none';
+            grpTema.style.display = 'block';
+            grpApres.style.display = 'block';
+            
+            texts['curso'].style.display = 'none';
+            texts['carga'].style.display = 'none';
+            texts['data'].style.display = 'none';
+            texts['tema'].style.display = 'block';
+            texts['apresentador'].style.display = 'block';
+            
+            radioLote.disabled = false;
+            lblModeLote.style.color = 'var(--c-fg)';
+        } else if (modelo === 'generico') {
+            grpCurso.style.display = 'none';
+            rowAlura.style.display = 'none';
+            grpTema.style.display = 'none';
+            grpApres.style.display = 'none';
+            
+            texts['curso'].style.display = 'none';
+            texts['carga'].style.display = 'none';
+            texts['data'].style.display = 'none';
+            texts['tema'].style.display = 'none';
+            texts['apresentador'].style.display = 'none';
+            
+            radioLote.disabled = false;
+            lblModeLote.style.color = 'var(--c-fg)';
+        }
+        
+        const newMode = document.querySelector('input[name="cert_mode"]:checked').value;
+        if (newMode === 'lote') {
+            inputNomeUnico.style.display = 'none';
+            inputNomeLote.style.display = 'block';
+            lblNome.textContent = 'Lista de Participantes (um por linha)';
+            texts['nome'].textContent = '<< Nomes em Lote >>';
+        } else {
+            inputNomeUnico.style.display = 'block';
+            inputNomeLote.style.display = 'none';
+            lblNome.textContent = 'Nome do Aluno';
+            texts['nome'].textContent = inputNomeUnico.value || texts['nome'].getAttribute('data-placeholder');
+        }
+
+        // Change background image based on template
+        const canvasEl = document.getElementById('cert-canvas');
+        if (canvasEl) {
+            canvasEl.style.backgroundImage = `url('certificado_base_${modelo}.png?v=${Date.now()}')`;
+        }
+    }
+
+    if (selModelo) {
+        let lastModelo = selModelo.value;
+        selModelo.addEventListener('change', () => {
+            if (selModelo.value !== lastModelo) {
+                lastModelo = selModelo.value;
+                loadConfigForModel();
+            }
+            updateFormState();
+        });
+    }
+    radiosMode.forEach(r => r.addEventListener('change', updateFormState));
 
     // Make elements draggable
     let activeEl = null;
@@ -265,6 +370,41 @@ document.addEventListener("DOMContentLoaded", () => {
             exportBtn.innerHTML = 'Gerando...';
             exportBtn.disabled = true;
 
+            const mode = document.querySelector('input[name="cert_mode"]:checked').value;
+            const modelo = selModelo ? selModelo.value : 'alura';
+
+            if (mode === 'lote') {
+                const formData = new FormData(document.getElementById('form-certificado'));
+                formData.append('modelo', modelo);
+                
+                // Add current configs to payload so python knows where things are!
+                // Actually, python can just read the JSON file directly since they are saved.
+                
+                fetch('/api/certificados-lote', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Erro na geracao');
+                    return res.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `Certificados_${modelo}.zip`;
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(err => alert(err.message))
+                .finally(() => {
+                    exportBtn.innerHTML = orig;
+                    exportBtn.disabled = false;
+                });
+                return;
+            }
+
+            // UNICO MODE
             const canvasEl = document.getElementById('cert-canvas');
             
             // html2canvas
@@ -339,7 +479,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
             });
             saveDefaultBtn.textContent = 'Salvando...';
-            fetch('/api/certificado-config', {
+            const modelo = selModelo ? selModelo.value : 'alura';
+            fetch(`/api/certificado-config?modelo=${modelo}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(newConfig)
@@ -364,7 +505,8 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append('file', file);
             
             btnUploadBg.textContent = 'Enviando...';
-            fetch('/api/upload-certificado-bg', {
+            const modelo = selModelo ? selModelo.value : 'alura';
+            fetch(`/api/upload-certificado-bg?modelo=${modelo}`, {
                 method: 'POST',
                 body: formData
             }).then(res => res.json())
@@ -372,7 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     const canvasEl = document.getElementById('cert-canvas');
                     if (canvasEl) {
-                        canvasEl.style.backgroundImage = `url('certificado_base.png?v=${Date.now()}')`;
+                        canvasEl.style.backgroundImage = `url('certificado_base_${modelo}.png?v=${Date.now()}')`;
                     }
                     btnUploadBg.textContent = 'Fundo Atualizado!';
                     setTimeout(() => btnUploadBg.textContent = 'Trocar Fundo', 2000);

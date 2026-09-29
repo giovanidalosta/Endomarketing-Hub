@@ -267,53 +267,85 @@ def api_ikanews():
 # GERADOR DE CERTIFICADO
 # ---------------------------------------------------------
 
-def gerar_certificado_img(nome, curso, carga, data):
-    base_path = os.path.join(ASSETS_DIR, "certificado_base.png")
-    img = Image.open(base_path)
-    draw = ImageDraw.Draw(img)
+import zipfile
 
-    fonte_nome = load_font("Exo-Regular.ttf", 105)
-    fonte_curso = load_font("Exo-Regular.ttf", 42)
-    fonte_info = load_font("Exo-Regular.ttf", 50)
-
-    # Nome
-    Y_NOME = 270
-    AJUSTE_X_NOME = 60
-    bbox = draw.textbbox((0, 0), nome, font=fonte_nome)
-    largura_texto = bbox[2] - bbox[0]
-    x_nome = ((img.width - largura_texto) / 2) + AJUSTE_X_NOME
-    draw.text((x_nome, Y_NOME), nome, fill="white", font=fonte_nome)
-
-    # Curso
-    linhas_curso = quebra_texto_bbox(draw, fonte_curso, curso, 1000)
-    for i, linha in enumerate(linhas_curso):
-        draw.text((480, 470 + (i * 50)), linha, fill="white", font=fonte_curso)
-
-    # Carga e Data
-    draw.text((480, 650), carga, fill="white", font=fonte_info)
-    draw.text((930, 650), data, fill="white", font=fonte_info)
-
-    output = BytesIO()
-    img.save(output, format='PNG')
-    output.seek(0)
-    return output, f"Certificado_{nome}.png"
-
-@app.route('/api/certificado', methods=['POST'])
-def api_certificado():
-    nome = request.form.get("nome", "").strip()
-    curso = request.form.get("curso", "").strip()
-    carga = request.form.get("carga", "").strip()
-    data = request.form.get("data", "").strip()
-
-    if not all([nome, curso, carga, data]):
-        return jsonify(error="Preencha todos os campos do certificado."), 400
-
+def desenhar_texto(draw, conf, texto, bbox_w=1000):
+    if not texto or not conf: return
     try:
-        img_io, filename = gerar_certificado_img(nome, curso, carga, data)
-        return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=filename)
+        top_str = conf.get("top", "0").replace("px", "")
+        left_str = conf.get("left", "0").replace("px", "")
+        
+        # very naive parser to match the CSS positions back to Pillow
+        y = float(top_str) - 40 # undoing the visual +40px adjustment
+        
+        # handle left calc(50% + 60px)
+        is_center = False
+        if "50%" in left_str or "translateX(-50%)" in conf.get("transform", ""):
+            is_center = True
+            
+        font = load_font("Exo-Regular.ttf", 105 if is_center else 50)
+        
+        if is_center:
+            # draw centered at X (1684 is canvas width)
+            bbox = draw.textbbox((0, 0), texto, font=font)
+            w_text = bbox[2] - bbox[0]
+            # default manual center adjust in python was +60
+            x = ((1684 - w_text) / 2) + 60
+            draw.text((x, y), texto, fill="white", font=font)
+        else:
+            try:
+                x = float(left_str)
+            except:
+                x = 480
+            linhas = quebra_texto_bbox(draw, font, texto, bbox_w)
+            for i, linha in enumerate(linhas):
+                draw.text((x, y + (i * 50)), linha, fill="white", font=font)
+                
     except Exception as e:
-        app.logger.exception("Erro ao gerar certificado")
-        return jsonify(error="Erro ao gerar o certificado."), 500
+        print(f"Error drawing {texto}: {e}")
+
+@app.route('/api/certificados-lote', methods=['POST'])
+def api_certificados_lote():
+    modelo = request.form.get("modelo", "alura")
+    nomes_lote = request.form.get("nomes_lote", "").strip()
+    if not nomes_lote:
+        return jsonify(error="A lista de nomes está vazia."), 400
+        
+    cfg = load_certificado_config().get(modelo, {})
+    
+    # fallback to default if image doesn't exist
+    base_path = os.path.join(ASSETS_DIR, f"certificado_base_{modelo}.png")
+    if not os.path.exists(base_path):
+        base_path = os.path.join(ASSETS_DIR, "certificado_base.png")
+        
+    try:
+        base_img = Image.open(base_path)
+    except:
+        return jsonify(error="Imagem base não encontrada."), 500
+
+    nomes = [n.strip() for n in nomes_lote.split('\n') if n.strip()]
+    
+    memory_zip = BytesIO()
+    with zipfile.ZipFile(memory_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for nome in nomes:
+            img = base_img.copy()
+            draw = ImageDraw.Draw(img)
+            
+            desenhar_texto(draw, cfg.get("cert-nome-txt"), nome)
+            desenhar_texto(draw, cfg.get("cert-curso-txt"), request.form.get("curso"))
+            desenhar_texto(draw, cfg.get("cert-carga-txt"), request.form.get("carga"))
+            desenhar_texto(draw, cfg.get("cert-data-txt"), request.form.get("data"))
+            desenhar_texto(draw, cfg.get("cert-tema-txt"), request.form.get("tema"))
+            desenhar_texto(draw, cfg.get("cert-apresentador-txt"), request.form.get("apresentador"))
+            
+            img_io = BytesIO()
+            img.save(img_io, format='PNG')
+            
+            clean_name = "".join(x for x in nome if x.isalnum() or x in " -_").strip()
+            zf.writestr(f"Certificado_{clean_name}.png", img_io.getvalue())
+            
+    memory_zip.seek(0)
+    return send_file(memory_zip, mimetype='application/zip', as_attachment=True, download_name=f'Certificados_{modelo}.zip')
 
 # ---------------------------------------------------------
 # INTERFACE PRINCIPAL
@@ -328,20 +360,35 @@ def load_certificado_config():
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     return {
-        "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"},
-        "cert-curso-txt": {"top": "500px", "left": "480px"},
-        "cert-carga-txt": {"top": "680px", "left": "480px"},
-        "cert-data-txt": {"top": "680px", "left": "930px"}
+        "alura": {
+            "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"},
+            "cert-curso-txt": {"top": "500px", "left": "480px"},
+            "cert-carga-txt": {"top": "680px", "left": "480px"},
+            "cert-data-txt": {"top": "680px", "left": "930px"}
+        },
+        "ikated": {
+            "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"},
+            "cert-tema-txt": {"top": "500px", "left": "480px"},
+            "cert-apresentador-txt": {"top": "680px", "left": "480px"}
+        },
+        "generico": {
+            "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"}
+        }
     }
 
 @app.route('/api/certificado-config', methods=['GET', 'POST'])
 def api_certificado_config():
+    modelo = request.args.get('modelo', 'alura')
+    cfg = load_certificado_config()
+    
     if request.method == 'POST':
         data = request.json
+        cfg[modelo] = data
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f)
+            json.dump(cfg, f)
         return jsonify(success=True)
-    return jsonify(load_certificado_config())
+        
+    return jsonify(cfg.get(modelo, cfg['alura']))
 
 @app.route('/api/upload-certificado-bg', methods=['POST'])
 def api_upload_certificado_bg():
@@ -351,10 +398,12 @@ def api_upload_certificado_bg():
     if file.filename == '':
         return jsonify(error="Nenhum arquivo selecionado."), 400
     
+    modelo = request.args.get('modelo', 'alura')
+    filename = f'certificado_base_{modelo}.png'
+    
     try:
-        # Save both in static for frontend viewing and assets for python backend
-        static_path = os.path.join(os.path.dirname(__file__), 'static', 'certificado_base.png')
-        assets_path = os.path.join(ASSETS_DIR, 'certificado_base.png')
+        static_path = os.path.join(os.path.dirname(__file__), 'static', filename)
+        assets_path = os.path.join(ASSETS_DIR, filename)
         
         img = Image.open(file.stream).convert("RGBA")
         img.save(static_path, "PNG")
