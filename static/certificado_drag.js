@@ -27,8 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!wrapper || !workspace) return;
         const availableWidth = workspace.clientWidth - 40; // 40px padding
         const scale = availableWidth / 1684;
-        wrapper.style.transform = \`scale(\${scale})\`;
-        wrapper.style.height = \`\${1190 * scale}px\`;
+        wrapper.style.transform = `scale(${scale})`;
+        wrapper.style.height = `${1190 * scale}px`;
     }
     
     window.addEventListener('resize', resizeCanvas);
@@ -107,8 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const dx = (e.clientX - initialX) / scale;
         const dy = (e.clientY - initialY) / scale;
         
-        activeEl.style.left = \`\${startLeft + dx}px\`;
-        activeEl.style.top = \`\${startTop + dy}px\`;
+        activeEl.style.left = `${startLeft + dx}px`;
+        activeEl.style.top = `${startTop + dy}px`;
     });
 
     document.addEventListener('mouseup', () => {
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 backgroundColor: null,
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = \`Certificado_\${inputs['nome'] ? inputs['nome'].value : 'Gerado'}.png\`;
+                link.download = `Certificado_${inputs['nome'] ? inputs['nome'].value : 'Gerado'}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             }).finally(() => {
