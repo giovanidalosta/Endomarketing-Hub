@@ -279,6 +279,8 @@ def desenhar_texto(draw, conf, texto, bbox_w=1000):
         show_label = conf.get("showLabel", False)
         label_text = conf.get("label", "CAMPO").upper()
         
+        label_color = conf.get("labelColor", "#08CFFF")
+        
         y = float(top_str) - 40
         
         is_center = False
@@ -306,7 +308,7 @@ def desenhar_texto(draw, conf, texto, bbox_w=1000):
                 label_bbox = draw.textbbox((0, 0), label_text, font=label_font)
                 label_w = label_bbox[2] - label_bbox[0]
                 label_x = ((1684 - label_w) / 2) + 60
-                draw.text((label_x, y), label_text, fill="#08CFFF", font=label_font)
+                draw.text((label_x, y), label_text, fill=label_color, font=label_font)
                 y += (font_size * 0.4) + 15
                 
             draw.text((x, y), texto, fill=color_str, font=font)
@@ -317,7 +319,7 @@ def desenhar_texto(draw, conf, texto, bbox_w=1000):
                 x = 480
                 
             if show_label:
-                draw.text((x, y), label_text, fill="#08CFFF", font=label_font)
+                draw.text((x, y), label_text, fill=label_color, font=label_font)
                 y += (font_size * 0.4) + 15
                 
             linhas = quebra_texto_bbox(draw, font, texto, bbox_w)
@@ -329,12 +331,22 @@ def desenhar_texto(draw, conf, texto, bbox_w=1000):
 
 @app.route('/api/certificados-lote', methods=['POST'])
 def api_certificados_lote():
+    import json
     modelo = request.form.get("modelo", "alura")
     nomes_lote = request.form.get("nomes_lote", "").strip()
     if not nomes_lote:
         return jsonify(error="A lista de nomes está vazia."), 400
         
     cfg = load_certificado_config().get(modelo, {})
+    
+    # Override with current visual state if provided
+    current_config_str = request.form.get("current_config", "{}")
+    try:
+        current_config = json.loads(current_config_str)
+        if current_config:
+            cfg = current_config
+    except:
+        pass
     
     # fallback to default if image doesn't exist
     base_path = os.path.join(ASSETS_DIR, f"certificado_base_{modelo}.png")

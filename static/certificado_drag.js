@@ -168,9 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const label = el.getAttribute('data-label') || 'CAMPO';
         const showLabel = el.dataset.showLabel === 'true';
+        const labelColor = el.dataset.labelColor || '#08CFFF';
         
         if (showLabel) {
-            el.innerHTML = `<span style="display:block; font-size:40%; color:#08CFFF; text-transform:uppercase; margin-bottom: 5px; font-weight: bold; font-family: 'Exo-Regular', sans-serif;">${label}</span><span>${val}</span>`;
+            el.innerHTML = `<span style="display:block; font-size:40%; color:${labelColor}; text-transform:uppercase; margin-bottom: 5px; font-weight: bold; font-family: 'Exo-Regular', sans-serif;">${label}</span><span>${val}</span>`;
         } else {
             el.textContent = val;
         }
@@ -179,15 +180,12 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.keys(inputs).forEach(key => {
         const inp = inputs[key];
         if (inp) {
-            // Give standard elements a data-label based on their initial content
             texts[key].setAttribute('data-label', texts[key].textContent);
             texts[key].setAttribute('data-placeholder', texts[key].textContent);
             texts[key].setAttribute('data-value', texts[key].textContent);
             
             inp.addEventListener('input', () => {
                 updateTextHtml(texts[key], inp.value || texts[key].getAttribute('data-placeholder'));
-                
-                // If it's nome, keep it centered horizontally if user hasn't moved it
                 if (key === 'nome' && !texts['nome'].dataset.moved) {
                     const conf = defaultConfig['cert-nome-txt'];
                     if (conf) {
@@ -222,17 +220,12 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.style.display = 'flex';
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
-            if (btnAddField) btnAddField.style.display = 'none';
-            if (dynFields) dynFields.style.display = 'none';
             
             texts['curso'].style.display = 'block';
             texts['carga'].style.display = 'block';
             texts['data'].style.display = 'block';
             texts['tema'].style.display = 'none';
             texts['apresentador'].style.display = 'none';
-            
-            // hide any custom fields
-            document.querySelectorAll('.cert-custom-field').forEach(el => el.style.display = 'none');
             
             radioLote.disabled = true;
             lblModeLote.style.color = 'var(--c-fg-muted)';
@@ -242,16 +235,12 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.style.display = 'none';
             grpTema.style.display = 'block';
             grpApres.style.display = 'block';
-            if (btnAddField) btnAddField.style.display = 'none';
-            if (dynFields) dynFields.style.display = 'none';
             
             texts['curso'].style.display = 'none';
             texts['carga'].style.display = 'none';
             texts['data'].style.display = 'none';
             texts['tema'].style.display = 'block';
             texts['apresentador'].style.display = 'block';
-            
-            document.querySelectorAll('.cert-custom-field').forEach(el => el.style.display = 'none');
             
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
@@ -260,16 +249,12 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.style.display = 'none';
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
-            if (btnAddField) btnAddField.style.display = 'block';
-            if (dynFields) dynFields.style.display = 'block';
             
             texts['curso'].style.display = 'none';
             texts['carga'].style.display = 'none';
             texts['data'].style.display = 'none';
             texts['tema'].style.display = 'none';
             texts['apresentador'].style.display = 'none';
-            
-            document.querySelectorAll('.cert-custom-field').forEach(el => el.style.display = 'block');
             
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
@@ -288,10 +273,44 @@ document.addEventListener("DOMContentLoaded", () => {
             texts['nome'].textContent = inputNomeUnico.value || texts['nome'].getAttribute('data-placeholder');
         }
 
-        // Change background image based on template
         const canvasEl = document.getElementById('cert-canvas');
         if (canvasEl) {
             canvasEl.style.backgroundImage = `url('/static/certificado_base_${modelo}.png?v=${Date.now()}')`;
+        }
+        
+        applyEditMode();
+    }
+    
+    let isEditMode = false;
+    const toggleEdit = document.getElementById('toggle-edit-mode');
+    if (toggleEdit) {
+        toggleEdit.addEventListener('change', (e) => {
+            isEditMode = e.target.checked;
+            applyEditMode();
+        });
+    }
+
+    function applyEditMode() {
+        const btnAddField = document.getElementById('btn-add-field');
+        const saveDefaultBtn = document.getElementById('save-default-certificado');
+        const resetBtn = document.getElementById('reset-certificado');
+        const btnUploadBg = document.getElementById('btn-upload-bg');
+        const propsPanel = document.getElementById('cert-props-panel');
+        
+        if (isEditMode) {
+            if (btnAddField) btnAddField.style.display = 'block';
+            if (saveDefaultBtn) saveDefaultBtn.style.display = 'inline-block';
+            if (resetBtn) resetBtn.style.display = 'inline-block';
+            if (btnUploadBg) btnUploadBg.style.display = 'inline-block';
+            document.querySelectorAll('.draggable-text').forEach(el => el.classList.add('edit-mode-active'));
+        } else {
+            if (btnAddField) btnAddField.style.display = 'none';
+            if (saveDefaultBtn) saveDefaultBtn.style.display = 'none';
+            if (resetBtn) resetBtn.style.display = 'none';
+            if (btnUploadBg) btnUploadBg.style.display = 'none';
+            if (propsPanel) propsPanel.style.display = 'none';
+            activePropsEl = null;
+            document.querySelectorAll('.draggable-text').forEach(el => el.classList.remove('edit-mode-active'));
         }
     }
 
@@ -360,6 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 color: el.style.color || '',
                 fontSize: el.style.fontSize || '',
                 showLabel: el.dataset.showLabel || '',
+                labelColor: el.dataset.labelColor || '',
                 moved: el.dataset.moved || ''
             };
         });
@@ -383,6 +403,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         el.style.fontSize = saved.fontSize;
                         if (saved.showLabel) el.dataset.showLabel = saved.showLabel;
                         else delete el.dataset.showLabel;
+                        if (saved.labelColor) el.dataset.labelColor = saved.labelColor;
+                        else delete el.dataset.labelColor;
                         if (saved.moved) el.dataset.moved = saved.moved;
                         else delete el.dataset.moved;
                         
@@ -397,6 +419,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputColor = document.getElementById('prop-color');
     const inputSize = document.getElementById('prop-size');
     const inputShowLabel = document.getElementById('prop-show-label');
+    const inputLabelColor = document.getElementById('prop-label-color');
+    const groupLabelColor = document.getElementById('prop-label-color-group');
     let activePropsEl = null;
 
     if (inputColor && inputSize && inputShowLabel) {
@@ -409,12 +433,23 @@ document.addEventListener("DOMContentLoaded", () => {
         inputShowLabel.addEventListener('change', (e) => {
             if (activePropsEl) {
                 activePropsEl.dataset.showLabel = e.target.checked ? 'true' : 'false';
+                if (groupLabelColor) groupLabelColor.style.display = e.target.checked ? 'flex' : 'none';
                 updateTextHtml(activePropsEl);
             }
         });
+        if (inputLabelColor) {
+            inputLabelColor.addEventListener('input', (e) => {
+                if (activePropsEl) {
+                    activePropsEl.dataset.labelColor = e.target.value;
+                    updateTextHtml(activePropsEl);
+                }
+            });
+        }
     }
 
     document.addEventListener('mousedown', (e) => {
+        if (!isEditMode) return;
+        
         const isPanelClick = e.target.closest('#cert-props-panel');
         const el = e.target.closest('.draggable-text');
         
@@ -432,8 +467,6 @@ document.addEventListener("DOMContentLoaded", () => {
             propsPanel.style.display = 'block';
             
             // Populate color
-            // getComputedStyle returns rgb(255, 255, 255), so we must convert or just use el.style.color if it's hex, but it might not be.
-            // Let's use a quick helper to convert rgb to hex if needed
             let color = window.getComputedStyle(el).color;
             if (color.startsWith('rgb')) {
                 const rgb = color.match(/\d+/g);
@@ -447,6 +480,10 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Populate show label
             inputShowLabel.checked = el.dataset.showLabel === 'true';
+            
+            // Populate label color
+            if (inputLabelColor) inputLabelColor.value = el.dataset.labelColor || '#08cfff';
+            if (groupLabelColor) groupLabelColor.style.display = inputShowLabel.checked ? 'flex' : 'none';
         }
         
         historyStack.push(captureState());
@@ -548,11 +585,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const modelo = selModelo ? selModelo.value : 'alura';
 
             if (mode === 'lote') {
+                // Populate hidden config with exact current visual state
+                const currentConfig = {};
+                document.querySelectorAll('.draggable-text').forEach(el => {
+                    const confObj = {
+                        top: el.style.top || window.getComputedStyle(el).top,
+                        left: el.style.left || window.getComputedStyle(el).left,
+                        transform: el.style.transform !== 'none' ? el.style.transform : '',
+                        color: el.style.color || window.getComputedStyle(el).color,
+                        fontSize: el.style.fontSize || window.getComputedStyle(el).fontSize,
+                        showLabel: el.dataset.showLabel === 'true',
+                        labelColor: el.dataset.labelColor || ''
+                    };
+                    if (el.classList.contains('cert-custom-field')) {
+                        confObj.label = el.getAttribute('data-label');
+                    }
+                    currentConfig[el.id] = confObj;
+                });
+                
+                const hiddenConfig = document.getElementById('hidden-config');
+                if (hiddenConfig) hiddenConfig.value = JSON.stringify(currentConfig);
+
                 const formData = new FormData(document.getElementById('form-certificado'));
                 formData.append('modelo', modelo);
-                
-                // Add current configs to payload so python knows where things are!
-                // Actually, python can just read the JSON file directly since they are saved.
                 
                 fetch('/api/certificados-lote', {
                     method: 'POST',
@@ -652,7 +707,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     transform: el.style.transform !== 'none' ? el.style.transform : '',
                     color: el.style.color || window.getComputedStyle(el).color,
                     fontSize: el.style.fontSize || window.getComputedStyle(el).fontSize,
-                    showLabel: el.dataset.showLabel === 'true'
+                    showLabel: el.dataset.showLabel === 'true',
+                    labelColor: el.dataset.labelColor || ''
                 };
                 if (el.classList.contains('cert-custom-field')) {
                     confObj.label = el.getAttribute('data-label');

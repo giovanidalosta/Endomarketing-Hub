@@ -166,6 +166,8 @@
         <div id="dynamic-fields-container"></div>
         <button type="button" id="btn-add-field" class="btn btn--outline" style="display: none; width: 100%; margin-top: 1rem;">+ Adicionar Campo Extra</button>
 
+        <!-- HIDDEN CONFIG FOR BATCH GENERATION -->
+        <input type="hidden" name="current_config" id="hidden-config" value="{}">
       </form>
 
     </aside>
@@ -173,24 +175,37 @@
     <!-- COL 3: Painel de Pré-visualização -->
     <section class="panel panel--preview" id="previews-container" style="position: relative;">
       
-      <div id="cert-props-panel" style="display: none; position: absolute; top: 80px; right: 20px; background: var(--c-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--c-border); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; width: 200px;">
-        <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color: var(--c-fg);">Propriedades</div>
+      <!-- TOGGLE EDIT MODE -->
+      <div style="position: absolute; top: 20px; right: 20px; z-index: 999; display: flex; align-items: center; gap: 10px; background: var(--c-bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--c-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <label style="font-size: 13px; font-weight: bold; color: var(--c-fg); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="toggle-edit-mode">
+          Modo de Edição (Arranjo e Cores)
+        </label>
+      </div>
+      
+      <div id="cert-props-panel" style="display: none; position: absolute; top: 70px; right: 20px; background: var(--c-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--c-border); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; width: 220px;">
+        <div style="font-size: 13px; font-weight: bold; margin-bottom: 12px; color: var(--c-fg);">Propriedades do Texto</div>
         
-        <div style="margin-bottom: 10px;">
-          <label style="font-size: 12px; color: var(--c-fg-muted); display: block; margin-bottom: 4px;">Cor do Texto:</label>
-          <input type="color" id="prop-color" value="#ffffff" style="width: 100%; height: 30px; border: none; cursor: pointer;">
+        <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+          <label style="font-size: 12px; color: var(--c-fg-muted);">Cor do Texto:</label>
+          <input type="color" id="prop-color" value="#ffffff" style="width: 32px; height: 32px; border: none; cursor: pointer; padding: 0; border-radius: 8px; overflow: hidden; background: transparent;">
         </div>
         
-        <div style="margin-bottom: 10px;">
-          <label style="font-size: 12px; color: var(--c-fg-muted); display: block; margin-bottom: 4px;">Tamanho da Fonte (px):</label>
-          <input type="number" id="prop-size" value="50" style="width: 100%; padding: 4px; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);">
+        <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+          <label style="font-size: 12px; color: var(--c-fg-muted);">Tamanho (px):</label>
+          <input type="number" id="prop-size" value="50" style="width: 60px; padding: 4px; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);">
         </div>
         
-        <div>
-          <label style="font-size: 12px; color: var(--c-fg); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <div style="border-top: 1px solid var(--c-border); margin: 10px -15px; padding: 10px 15px 0 15px;">
+          <label style="font-size: 12px; color: var(--c-fg); display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 10px;">
             <input type="checkbox" id="prop-show-label">
             Mostrar Título Fixo acima
           </label>
+          
+          <div id="prop-label-color-group" style="display: none; align-items: center; justify-content: space-between;">
+            <label style="font-size: 12px; color: var(--c-fg-muted);">Cor do Título:</label>
+            <input type="color" id="prop-label-color" value="#08cfff" style="width: 32px; height: 32px; border: none; cursor: pointer; padding: 0; border-radius: 8px; overflow: hidden; background: transparent;">
+          </div>
         </div>
       </div>
       
