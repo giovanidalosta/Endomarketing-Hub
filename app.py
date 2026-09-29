@@ -343,6 +343,28 @@ def api_certificado_config():
         return jsonify(success=True)
     return jsonify(load_certificado_config())
 
+@app.route('/api/upload-certificado-bg', methods=['POST'])
+def api_upload_certificado_bg():
+    if 'file' not in request.files:
+        return jsonify(error="Nenhum arquivo enviado."), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify(error="Nenhum arquivo selecionado."), 400
+    
+    try:
+        # Save both in static for frontend viewing and assets for python backend
+        static_path = os.path.join(os.path.dirname(__file__), 'static', 'certificado_base.png')
+        assets_path = os.path.join(ASSETS_DIR, 'certificado_base.png')
+        
+        img = Image.open(file.stream).convert("RGBA")
+        img.save(static_path, "PNG")
+        img.save(assets_path, "PNG")
+        
+        return jsonify(success=True)
+    except Exception as e:
+        app.logger.exception("Erro ao salvar o fundo do certificado")
+        return jsonify(error="Erro ao salvar a imagem."), 500
+
 @app.route('/')
 def index():
     return render_template('index.html')

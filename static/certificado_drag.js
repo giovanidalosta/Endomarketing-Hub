@@ -350,4 +350,40 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         };
     }
+    const btnUploadBg = document.getElementById('btn-upload-bg');
+    const inputUploadBg = document.getElementById('upload-bg-certificado');
+    if (btnUploadBg && inputUploadBg) {
+        btnUploadBg.style.display = 'inline-block';
+        btnUploadBg.onclick = () => inputUploadBg.click();
+        
+        inputUploadBg.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            btnUploadBg.textContent = 'Enviando...';
+            fetch('/api/upload-certificado-bg', {
+                method: 'POST',
+                body: formData
+            }).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const canvasEl = document.getElementById('cert-canvas');
+                    if (canvasEl) {
+                        canvasEl.style.backgroundImage = `url('certificado_base.png?v=${Date.now()}')`;
+                    }
+                    btnUploadBg.textContent = 'Fundo Atualizado!';
+                    setTimeout(() => btnUploadBg.textContent = 'Trocar Fundo', 2000);
+                } else {
+                    alert(data.error || 'Erro ao fazer upload');
+                    btnUploadBg.textContent = 'Trocar Fundo';
+                }
+            }).catch(() => {
+                alert('Erro de conexão');
+                btnUploadBg.textContent = 'Trocar Fundo';
+            });
+        };
+    }
 });
