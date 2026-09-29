@@ -34,6 +34,14 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener('resize', resizeCanvas);
     setTimeout(resizeCanvas, 100);
 
+    // Resize when switching to the Certificado tab
+    const certNavBtn = document.querySelector('.nav-btn[data-target="certificado"]');
+    if (certNavBtn) {
+        certNavBtn.addEventListener('click', () => {
+            setTimeout(resizeCanvas, 50);
+        });
+    }
+
     const formCert = document.getElementById('form-certificado');
     if (formCert) {
         formCert.addEventListener('submit', (e) => e.preventDefault());
