@@ -76,8 +76,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const lblModeLote = document.getElementById('lbl-mode-lote');
     const radioLote = document.getElementById('radio-mode-lote');
     
+    function createCustomField(fieldId, label, conf) {
+        if (document.getElementById(`input-${fieldId}`)) return; // already exists
+        
+        const divId = `cert-${fieldId}-txt`;
+        const dynFields = document.getElementById('dynamic-fields-container');
+        const group = document.createElement('div');
+        group.className = 'field';
+        group.innerHTML = `<label>${label}</label><input type="text" name="${fieldId}" id="input-${fieldId}" class="form__input" placeholder="Preencha o campo..." />`;
+        if (dynFields) dynFields.appendChild(group);
+        
+        const canvasEl = document.getElementById('cert-canvas');
+        const newText = document.createElement('div');
+        newText.className = 'draggable-text cert-custom-field';
+        newText.id = divId;
+        newText.textContent = label;
+        newText.setAttribute('data-label', label);
+        if (conf) {
+            newText.style.top = conf.top;
+            newText.style.left = conf.left;
+            newText.style.transform = conf.transform || 'none';
+        } else {
+            newText.style.top = '400px';
+            newText.style.left = '400px';
+        }
+        if (canvasEl) canvasEl.appendChild(newText);
+        
+        const inp = document.getElementById(`input-${fieldId}`);
+        if (inp) {
+            inp.addEventListener('input', () => {
+                newText.textContent = inp.value || label;
+            });
+        }
+    }
+
     function loadConfigForModel() {
         const modelo = selModelo ? selModelo.value : 'alura';
+        
+        // Clear previous custom fields from DOM
+        document.querySelectorAll('.cert-custom-field').forEach(el => el.remove());
+        const dynFields = document.getElementById('dynamic-fields-container');
+        if (dynFields) dynFields.innerHTML = '';
+        
         fetch(`/api/certificado-config?modelo=${modelo}`)
             .then(res => res.json())
             .then(config => {
@@ -90,6 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         el.style.top = conf.top;
                         el.style.left = conf.left;
                         el.style.transform = conf.transform || 'none';
+                    }
+                });
+                
+                // Re-create custom fields
+                Object.keys(config).forEach(k => {
+                    if (k.startsWith('cert-extra_')) {
+                        const fieldId = k.replace('cert-', '').replace('-txt', '');
+                        const conf = config[k];
+                        createCustomField(fieldId, conf.label || 'Campo Extra', conf);
                     }
                 });
             });
@@ -130,18 +179,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const modelo = selModelo.value;
         const mode = document.querySelector('input[name="cert_mode"]:checked').value;
         
+        const btnAddField = document.getElementById('btn-add-field');
+        const dynFields = document.getElementById('dynamic-fields-container');
+        
         // Handle fields visibility
         if (modelo === 'alura') {
             grpCurso.style.display = 'block';
             rowAlura.style.display = 'flex';
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
+            if (btnAddField) btnAddField.style.display = 'none';
+            if (dynFields) dynFields.style.display = 'none';
             
             texts['curso'].style.display = 'block';
             texts['carga'].style.display = 'block';
             texts['data'].style.display = 'block';
             texts['tema'].style.display = 'none';
             texts['apresentador'].style.display = 'none';
+            
+            // hide any custom fields
+            document.querySelectorAll('.cert-custom-field').forEach(el => el.style.display = 'none');
             
             radioLote.disabled = true;
             lblModeLote.style.color = 'var(--c-fg-muted)';
@@ -151,12 +208,16 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.style.display = 'none';
             grpTema.style.display = 'block';
             grpApres.style.display = 'block';
+            if (btnAddField) btnAddField.style.display = 'none';
+            if (dynFields) dynFields.style.display = 'none';
             
             texts['curso'].style.display = 'none';
             texts['carga'].style.display = 'none';
             texts['data'].style.display = 'none';
             texts['tema'].style.display = 'block';
             texts['apresentador'].style.display = 'block';
+            
+            document.querySelectorAll('.cert-custom-field').forEach(el => el.style.display = 'none');
             
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
@@ -165,12 +226,16 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.style.display = 'none';
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
+            if (btnAddField) btnAddField.style.display = 'block';
+            if (dynFields) dynFields.style.display = 'block';
             
             texts['curso'].style.display = 'none';
             texts['carga'].style.display = 'none';
             texts['data'].style.display = 'none';
             texts['tema'].style.display = 'none';
             texts['apresentador'].style.display = 'none';
+            
+            document.querySelectorAll('.cert-custom-field').forEach(el => el.style.display = 'block');
             
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
@@ -192,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Change background image based on template
         const canvasEl = document.getElementById('cert-canvas');
         if (canvasEl) {
-            canvasEl.style.backgroundImage = `url('certificado_base_${modelo}.png?v=${Date.now()}')`;
+            canvasEl.style.backgroundImage = `url('/static/certificado_base_${modelo}.png?v=${Date.now()}')`;
         }
     }
 
@@ -207,6 +272,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     radiosMode.forEach(r => r.addEventListener('change', updateFormState));
+    
+    let extraFieldsCount = 0;
+    const btnAddField = document.getElementById('btn-add-field');
+    if (btnAddField) {
+        btnAddField.addEventListener('click', () => {
+            const label = prompt('Digite o nome do novo campo (ex: Local, Assinatura):');
+            if (!label) return;
+            
+            extraFieldsCount = Date.now();
+            const fieldId = `extra_${extraFieldsCount}`;
+            createCustomField(fieldId, label);
+        });
+    }
 
     // Make elements draggable
     let activeEl = null;
@@ -272,31 +350,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.querySelectorAll('.draggable-text').forEach(el => {
-        el.addEventListener('mousedown', (e) => {
-            historyStack.push(captureState());
-            if (historyStack.length > 50) historyStack.shift();
+    document.addEventListener('mousedown', (e) => {
+        const el = e.target.closest('.draggable-text');
+        if (!el) return;
+        
+        historyStack.push(captureState());
+        if (historyStack.length > 50) historyStack.shift();
 
-            activeEl = el;
-            activeEl.classList.add('dragging');
-            
-            const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
-            initialX = e.clientX;
-            initialY = e.clientY;
-            
-            if (el.id === 'cert-nome-txt' && !el.dataset.moved) {
-                const rect = el.getBoundingClientRect();
-                const canvasRect = document.getElementById('cert-canvas').getBoundingClientRect();
-                el.style.transform = 'none';
-                el.style.left = ((rect.left - canvasRect.left) / scale) + 'px';
-                el.dataset.moved = 'true';
-            }
+        activeEl = el;
+        activeEl.classList.add('dragging');
+        
+        const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
+        initialX = e.clientX;
+        initialY = e.clientY;
+        
+        if (el.id === 'cert-nome-txt' && !el.dataset.moved) {
+            const rect = el.getBoundingClientRect();
+            const canvasRect = document.getElementById('cert-canvas').getBoundingClientRect();
+            el.style.transform = 'none';
+            el.style.left = ((rect.left - canvasRect.left) / scale) + 'px';
+            el.dataset.moved = 'true';
+        }
 
-            startLeft = parseFloat(getComputedStyle(el).left);
-            startTop = parseFloat(getComputedStyle(el).top);
-            
-            buildSnapTargets();
-        });
+        startLeft = parseFloat(getComputedStyle(el).left);
+        startTop = parseFloat(getComputedStyle(el).top);
+        
+        buildSnapTargets();
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -472,11 +551,15 @@ document.addEventListener("DOMContentLoaded", () => {
         saveDefaultBtn.onclick = () => {
             const newConfig = {};
             document.querySelectorAll('.draggable-text').forEach(el => {
-                newConfig[el.id] = {
+                const confObj = {
                     top: el.style.top || window.getComputedStyle(el).top,
                     left: el.style.left || window.getComputedStyle(el).left,
                     transform: el.style.transform !== 'none' ? el.style.transform : ''
                 };
+                if (el.classList.contains('cert-custom-field')) {
+                    confObj.label = el.getAttribute('data-label');
+                }
+                newConfig[el.id] = confObj;
             });
             saveDefaultBtn.textContent = 'Salvando...';
             const modelo = selModelo ? selModelo.value : 'alura';
@@ -514,7 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     const canvasEl = document.getElementById('cert-canvas');
                     if (canvasEl) {
-                        canvasEl.style.backgroundImage = `url('certificado_base_${modelo}.png?v=${Date.now()}')`;
+                        canvasEl.style.backgroundImage = `url('/static/certificado_base_${modelo}.png?v=${Date.now()}')`;
                     }
                     btnUploadBg.textContent = 'Fundo Atualizado!';
                     setTimeout(() => btnUploadBg.textContent = 'Trocar Fundo', 2000);

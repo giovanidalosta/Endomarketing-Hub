@@ -338,6 +338,11 @@ def api_certificados_lote():
             desenhar_texto(draw, cfg.get("cert-tema-txt"), request.form.get("tema"))
             desenhar_texto(draw, cfg.get("cert-apresentador-txt"), request.form.get("apresentador"))
             
+            for k in cfg.keys():
+                if k.startswith("cert-extra_"):
+                    field_id = k.replace("cert-", "").replace("-txt", "")
+                    desenhar_texto(draw, cfg[k], request.form.get(field_id))
+            
             img_io = BytesIO()
             img.save(img_io, format='PNG')
             
