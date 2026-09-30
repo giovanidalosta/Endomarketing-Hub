@@ -407,12 +407,15 @@ def load_certificado_config():
             "cert-data-txt": {"top": "680px", "left": "930px"}
         },
         "ikated": {
-            "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"},
-            "cert-tema-txt": {"top": "500px", "left": "480px"},
-            "cert-apresentador-txt": {"top": "680px", "left": "480px"}
+            "cert-extra_titulo": {"top": "240px", "left": "150px", "fontSize": "30px", "color": "#ffffff", "label": "CERTIFICADO DE PARTICIPAÇÃO"},
+            "cert-nome-txt": {"top": "290px", "left": "150px", "fontSize": "110px", "color": "#ffffff"},
+            "cert-tema-txt": {"top": "520px", "left": "calc(50%)", "transform": "translateX(-50%)", "fontSize": "35px", "color": "#ffffff"},
+            "cert-data-txt": {"top": "780px", "left": "calc(50%)", "transform": "translateX(-50%)", "fontSize": "30px", "color": "#ffffff"},
+            "cert-apresentador-txt": {"top": "840px", "left": "calc(50%)", "transform": "translateX(-50%)", "fontSize": "30px", "color": "#ffffff"},
+            "cert-extra_ikatec": {"top": "930px", "left": "1320px", "fontSize": "80px", "color": "#ffffff", "label": "ikatec"}
         },
         "generico": {
-            "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)"}
+            "cert-nome-txt": {"top": "310px", "left": "calc(50% + 60px)", "transform": "translateX(-50%)", "color": "#ffffff"}
         }
     }
 

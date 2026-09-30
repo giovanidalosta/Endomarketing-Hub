@@ -218,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (modelo === 'alura') {
             grpCurso.style.display = 'block';
             rowAlura.style.display = 'flex';
+            rowAlura.querySelector('.field:first-child').style.display = 'block'; // show carga
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
             
@@ -232,15 +233,21 @@ document.addEventListener("DOMContentLoaded", () => {
             if (mode === 'lote') document.querySelector('input[value="unico"]').checked = true;
         } else if (modelo === 'ikated') {
             grpCurso.style.display = 'none';
-            rowAlura.style.display = 'none';
+            rowAlura.style.display = 'flex';
+            rowAlura.querySelector('.field:first-child').style.display = 'none'; // hide carga
+            
             grpTema.style.display = 'block';
             grpApres.style.display = 'block';
             
             texts['curso'].style.display = 'none';
             texts['carga'].style.display = 'none';
-            texts['data'].style.display = 'none';
+            texts['data'].style.display = 'block';
             texts['tema'].style.display = 'block';
             texts['apresentador'].style.display = 'block';
+            
+            inputs['data'].placeholder = "Concluído no dia 30 de setembro de 2025";
+            texts['data'].setAttribute('data-placeholder', "Concluído no dia 30 de setembro de 2025");
+            if (!inputs['data'].value) texts['data'].textContent = "Concluído no dia 30 de setembro de 2025";
             
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
@@ -339,14 +346,43 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let extraFieldsCount = 0;
     const btnAddField = document.getElementById('btn-add-field');
-    if (btnAddField) {
+    const modalAdd = document.getElementById('modal-add-field');
+    const modalInput = document.getElementById('modal-field-name');
+    const modalCancel = document.getElementById('modal-btn-cancel');
+    const modalConfirm = document.getElementById('modal-btn-confirm');
+    
+    if (btnAddField && modalAdd) {
         btnAddField.addEventListener('click', () => {
-            const label = prompt('Digite o nome do novo campo (ex: Local, Assinatura):');
-            if (!label) return;
+            modalInput.value = '';
+            modalAdd.style.display = 'flex';
+            modalInput.focus();
+        });
+        
+        modalCancel.addEventListener('click', () => {
+            modalAdd.style.display = 'none';
+        });
+        
+        const confirmField = () => {
+            const label = modalInput.value.trim();
+            if (!label) {
+                modalInput.focus();
+                return;
+            }
             
+            modalAdd.style.display = 'none';
             extraFieldsCount = Date.now();
             const fieldId = `extra_${extraFieldsCount}`;
             createCustomField(fieldId, label);
+        };
+        
+        modalConfirm.addEventListener('click', confirmField);
+        modalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmField();
+            } else if (e.key === 'Escape') {
+                modalAdd.style.display = 'none';
+            }
         });
     }
 

@@ -112,9 +112,9 @@
         <div class="field" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--c-border);">
           <label>Modelo do Certificado</label>
           <select id="cert-modelo" name="modelo" class="form__input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);">
-            <option value="alura">Alura (Padrão)</option>
+            <option value="alura">Alura</option>
             <option value="ikated">IKATED</option>
-            <option value="generico">Evento Genérico</option>
+            <option value="generico">Evento</option>
           </select>
 
           <label>Modo de Geração</label>
@@ -154,12 +154,12 @@
 
         <!-- IKATED FIELDS -->
         <div class="field" id="group-tema" style="display: none;">
-          <label>Tema</label>
-          <input type="text" name="tema" />
+          <label>Texto do Tema</label>
+          <input type="text" name="tema" placeholder="Certificamos que participou do IKATED: Integração de IA em Sistemas" />
         </div>
         <div class="field" id="group-apresentador" style="display: none;">
-          <label>Apresentador(a)</label>
-          <input type="text" name="apresentador" />
+          <label>Texto do Apresentador e Carga</label>
+          <input type="text" name="apresentador" placeholder="Ministrado por Deyvisson Tavares Carga horária: 1 horas" />
         </div>
         
         <!-- GENERIC FIELDS -->
@@ -257,6 +257,19 @@
 
     </section>
   </main>
+
+  <!-- Add Custom Field Modal -->
+  <div id="modal-add-field" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: var(--c-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--c-border); width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+      <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: var(--c-fg);">Novo Campo Extra</h3>
+      <label style="font-size: 13px; color: var(--c-fg-muted); display: block; margin-bottom: 5px;">Nome do campo (ex: Local, Assinatura)</label>
+      <input type="text" id="modal-field-name" style="width: 100%; margin-bottom: 15px; padding: 8px; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);" autocomplete="off">
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" id="modal-btn-cancel" class="btn" style="background: transparent; color: var(--c-fg); border: 1px solid var(--c-border);">Cancelar</button>
+        <button type="button" id="modal-btn-confirm" class="btn btn--primary">Adicionar</button>
+      </div>
+    </div>
+  </div>
 
   <script src="{{ url_for('static', filename='script.js') }}?v=11"></script>
   <script src="{{ url_for('static', filename='certificado_drag.js') }}?v=1"></script>
