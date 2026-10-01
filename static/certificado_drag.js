@@ -294,7 +294,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateFormState() {
         const modelo = selModelo.value;
-        const mode = document.querySelector('input[name="cert_mode"]:checked').value;
+        const modeInput = document.querySelector('input[name="cert_mode"]:checked');
+        let mode = modeInput ? modeInput.value : 'unico';
+        
+        const lblLote = document.getElementById('lbl-mode-lote');
+        const radioUnico = document.getElementById('radio-mode-unico');
+        
+        if (modelo === 'alura') {
+            if (lblLote) lblLote.style.display = 'none';
+            if (mode === 'lote' && radioUnico) {
+                radioUnico.checked = true;
+                mode = 'unico';
+            }
+        } else {
+            if (lblLote) lblLote.style.display = 'flex';
+        }
         
         const btnAddField = document.getElementById('btn-add-field');
         const dynFields = document.getElementById('dynamic-fields-container');
@@ -302,7 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Handle fields visibility
         if (modelo === 'alura') {
             grpCurso.style.display = 'block';
-            rowAlura.style.display = 'flex';
+            rowAlura.style.display = 'grid';
+            rowAlura.style.gridTemplateColumns = '1fr 2fr';
             rowAlura.querySelector('.field:first-child').style.display = 'block'; // show carga
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
@@ -316,8 +331,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // Alura: sem prefixo nos campos — labels já estão na imagem base
             texts['carga'].removeAttribute('data-prefix');
             texts['data'].removeAttribute('data-prefix');
-            inputs['data'].placeholder = 'Ex: 01 de Outubro de 2026';
-            texts['data'].setAttribute('data-placeholder', '01 de Outubro de 2026');
+            inputs['data'].placeholder = 'Ex: 01/01/2026';
+            texts['data'].setAttribute('data-placeholder', '01/01/2026');
             if (!inputs['data'].value) updateTextHtml(texts['data'], texts['data'].getAttribute('data-placeholder'));
             const hintAlura = document.getElementById('data-prefix-hint');
             if (hintAlura) hintAlura.style.display = 'none';
@@ -329,7 +344,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (mode === 'lote') document.querySelector('input[value="unico"]').checked = true;
         } else if (modelo === 'ikated') {
             grpCurso.style.display = 'none';
-            rowAlura.style.display = 'flex';
+            rowAlura.style.display = 'grid';
+            rowAlura.style.gridTemplateColumns = '1fr 2fr';
             rowAlura.querySelector('.field:first-child').style.display = 'block'; // mostrar carga no IKATED
 
             grpTema.style.display = 'block';
@@ -352,9 +368,15 @@ document.addEventListener("DOMContentLoaded", () => {
             texts['data'].setAttribute('data-placeholder', '28 de agosto de 2025');
             if (!inputs['data'].value) updateTextHtml(texts['data'], texts['data'].getAttribute('data-placeholder'));
             const hintIkated = document.getElementById('data-prefix-hint');
-            if (hintIkated) hintIkated.style.display = 'block';
+            if (hintIkated) hintIkated.style.display = 'none';
             const cargaHintIkated = document.getElementById('carga-prefix-hint');
-            if (cargaHintIkated) cargaHintIkated.style.display = 'block';
+            if (cargaHintIkated) cargaHintIkated.style.display = 'none';
+            
+            const apresLabel = grpApres.querySelector('label');
+            if (apresLabel) apresLabel.innerHTML = 'Apresentador';
+            inputs['apresentador'].placeholder = 'Ex: Giovani Freitas';
+            texts['apresentador'].setAttribute('data-placeholder', 'Giovani Freitas');
+            if (!inputs['apresentador'].value) updateTextHtml(texts['apresentador'], texts['apresentador'].getAttribute('data-placeholder'));
 
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
@@ -835,73 +857,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Override the "Export" button for Certificado
-    const exportBtn = document.getElementById('btn-baixar-cert');
-    if (exportBtn) {
-        exportBtn.disabled = false;
-        exportBtn.textContent = 'Baixar Certificado';
-        exportBtn.onclick = () => {
-            const orig = exportBtn.innerHTML;
-            exportBtn.innerHTML = 'Gerando...';
-            exportBtn.disabled = true;
+function setupExportButtons() {
+    const btnZip = document.getElementById('btn-baixar-cert');
+    const btnPdf = document.getElementById('btn-baixar-cert-pdf');
+    
+    const handler = (format) => {
+        const btn = format === 'pdf' ? btnPdf : btnZip;
+        const orig = btn.innerHTML;
+        btn.innerHTML = 'Gerando...';
+        btn.disabled = true;
 
-            const mode = document.querySelector('input[name="cert_mode"]:checked').value;
-            const modelo = selModelo ? selModelo.value : 'alura';
+        const mode = document.querySelector('input[name="cert_mode"]:checked').value;
+        const modelo = selModelo ? selModelo.value : 'alura';
+        
+        let temaText = document.querySelector('#form-certificado [name="tema"]').value.trim();
+        let temaWords = temaText ? temaText.replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).slice(0, 3).join('_') : modelo;
+        let baseName = `Certificados_${temaWords}`;
 
-            if (mode === 'lote') {
-                // Populate hidden config with exact current visual state
-                const currentConfig = {};
-                document.querySelectorAll('.draggable-text').forEach(el => {
-                    const confObj = {
-                        top: el.style.top || window.getComputedStyle(el).top,
-                        left: el.style.left || window.getComputedStyle(el).left,
-                        transform: el.style.transform !== 'none' ? el.style.transform : '',
-                        color: el.style.color || window.getComputedStyle(el).color,
-                        fontSize: el.style.fontSize || window.getComputedStyle(el).fontSize,
-                        showLabel: el.dataset.showLabel === 'true',
-                        labelColor: el.dataset.labelColor || ''
-                    };
-                    if (el.classList.contains('cert-custom-field')) {
-                        confObj.label = el.getAttribute('data-label');
-                    }
-                    currentConfig[el.id] = confObj;
-                });
-                
-                const hiddenConfig = document.getElementById('hidden-config');
-                if (hiddenConfig) hiddenConfig.value = JSON.stringify(currentConfig);
-
-                const formData = new FormData(document.getElementById('form-certificado'));
-                formData.append('modelo', modelo);
-                
-                fetch('/api/certificados-lote', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Erro na geracao');
-                    return res.blob();
-                })
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `Certificados_${modelo}.zip`;
-                    link.click();
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(err => alert(err.message))
-                .finally(() => {
-                    exportBtn.innerHTML = orig;
-                    exportBtn.disabled = false;
-                });
-                return;
-            }
-
-            // UNICO MODE
-            const canvasEl = document.getElementById('cert-canvas');
-            
-            // html2canvas
-            html2canvas(canvasEl, {
+        const canvasEl = document.getElementById('cert-canvas');
+        
+        const generateCanvas = () => {
+            return html2canvas(canvasEl, {
                 scale: 1, 
                 useCORS: true,
                 backgroundColor: null,
@@ -911,9 +887,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 windowHeight: 1190,
                 onclone: (clonedDoc) => {
                     const clonedWrapper = clonedDoc.getElementById('cert-wrapper');
-                    if (clonedWrapper) {
-                        clonedWrapper.style.transform = 'none';
-                    }
+                    if (clonedWrapper) clonedWrapper.style.transform = 'none';
                     const clonedWorkspace = clonedDoc.getElementById('cert-workspace');
                     if (clonedWorkspace) {
                         clonedWorkspace.style.overflow = 'visible';
@@ -927,17 +901,106 @@ document.addEventListener("DOMContentLoaded", () => {
                         clonedCanvas.style.margin = '0';
                     }
                 }
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `Certificado_${inputs['nome'] ? inputs['nome'].value : 'Gerado'}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }).finally(() => {
-                exportBtn.innerHTML = orig;
-                exportBtn.disabled = false;
             });
         };
-    }
+
+        if (mode === 'lote') {
+            const rawNames = document.getElementById('input-nome-lote').value;
+            const nomes = rawNames.split('\n').map(n => n.trim()).filter(n => n);
+            
+            if (nomes.length === 0) {
+                alert('Lista de nomes vazia.');
+                btn.innerHTML = orig;
+                btn.disabled = false;
+                return;
+            }
+            
+            if (format === 'zip' && typeof JSZip === 'undefined') {
+                alert('Erro: Biblioteca JSZip não carregada. Tente recarregar a página.');
+                btn.innerHTML = orig;
+                btn.disabled = false;
+                return;
+            }
+            
+            btn.innerHTML = 'Gerando Lote...';
+            
+            let zip = format === 'zip' ? new JSZip() : null;
+            let folder = zip ? zip.folder(baseName) : null;
+            let pdf = format === 'pdf' ? new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'px', format: [1684, 1190] }) : null;
+            
+            let p = Promise.resolve();
+            const originalName = texts['nome'].getAttribute('data-value') || texts['nome'].textContent;
+            
+            nomes.forEach((nomeAluno, index) => {
+                p = p.then(() => {
+                    btn.innerHTML = `Gerando ${index + 1}/${nomes.length}...`;
+                    updateTextHtml(texts['nome'], nomeAluno);
+                    return new Promise(resolve => setTimeout(resolve, 100));
+                }).then(() => {
+                    return generateCanvas();
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    if (format === 'zip') {
+                        const base64Data = imgData.replace(/^data:image\/(png|jpg);base64,/, "");
+                        folder.file(`Certificado_${nomeAluno}.png`, base64Data, {base64: true});
+                    } else if (format === 'pdf') {
+                        if (index > 0) pdf.addPage([1684, 1190], 'landscape');
+                        pdf.addImage(imgData, 'PNG', 0, 0, 1684, 1190);
+                    }
+                });
+            });
+            
+            p.then(() => {
+                updateTextHtml(texts['nome'], originalName);
+                if (format === 'zip') {
+                    btn.innerHTML = 'Compactando ZIP...';
+                    return zip.generateAsync({type:"blob"}).then(content => {
+                        const url = window.URL.createObjectURL(content);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `${baseName}.zip`;
+                        link.click();
+                        window.URL.revokeObjectURL(url);
+                    });
+                } else if (format === 'pdf') {
+                    btn.innerHTML = 'Gerando PDF...';
+                    pdf.save(`${baseName}.pdf`);
+                }
+            }).catch(err => {
+                alert('Erro na geração: ' + err.message);
+            }).finally(() => {
+                updateTextHtml(texts['nome'], originalName);
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            });
+
+        } else {
+            // UNICO
+            generateCanvas().then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const nomeAluno = inputs['nome'] ? inputs['nome'].value : 'Gerado';
+                
+                if (format === 'zip') { // Single format PNG
+                    const link = document.createElement('a');
+                    link.download = `Certificado_${nomeAluno}.png`;
+                    link.href = imgData;
+                    link.click();
+                } else {
+                    const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'px', format: [1684, 1190] });
+                    pdf.addImage(imgData, 'PNG', 0, 0, 1684, 1190);
+                    pdf.save(`Certificado_${nomeAluno}.pdf`);
+                }
+            }).finally(() => {
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            });
+        }
+    };
+
+    if (btnZip) btnZip.onclick = () => handler('zip');
+    if (btnPdf) btnPdf.onclick = () => handler('pdf');
+}
+setupExportButtons();
 
 
     const saveDefaultBtn = document.getElementById('save-default-certificado');
