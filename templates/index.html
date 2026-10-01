@@ -75,7 +75,7 @@
           <input type="file" id="cardapio-file" accept=".xlsx" />
         </div>
         
-        <div id="cardapio-editor" style="display:none; margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+        <div id="cardapio-editor" style="display:none; margin-top: 1rem; flex-direction: column; gap: 1rem;">
           <div class="divider"></div>
           <div class="panel__title">Editar Dados do Cardápio</div>
           <div class="field">
@@ -106,99 +106,172 @@
       </form>
 
       <!-- CERTIFICADO FORM -->
-      <form id="form-certificado" class="tool-form" action="/api/certificado" method="post">
+      <form id="form-certificado" class="tool-form" method="post" action="/api/certificados-lote">
         <div class="panel__title">Dados do Certificado</div>
         
-        <div class="field" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--c-border);">
-          <label>Modelo do Certificado</label>
-          <select id="cert-modelo" name="modelo" class="form__input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);">
+        <div class="field">
+          <label for="cert-modelo">Modelo do Certificado</label>
+          <select id="cert-modelo" name="modelo" class="select-css">
             <option value="alura">Alura</option>
             <option value="ikated">IKATED</option>
-            <option value="generico">Evento</option>
           </select>
+        </div>
 
+        <div class="field" style="margin-top: 0.5rem; margin-bottom: 1rem;">
           <label>Modo de Geração</label>
-          <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-              <input type="radio" name="cert_mode" value="unico" checked>
-              Único
+          <div style="display: flex; gap: 2rem; align-items: center; margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin: 0; cursor: pointer;">
+              <input type="radio" name="cert_mode" value="unico" id="radio-mode-unico" checked> Único
             </label>
-            <label id="lbl-mode-lote" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--c-fg-muted);">
-              <input type="radio" name="cert_mode" value="lote" id="radio-mode-lote" disabled>
-              Em Lote
+            <label id="lbl-mode-lote" style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin: 0; cursor: pointer; white-space: nowrap;">
+              <input type="radio" name="cert_mode" value="lote" id="radio-mode-lote"> Em Lote
             </label>
           </div>
         </div>
 
         <div class="field" id="group-nome">
-          <label id="label-nome">Nome Completo</label>
-          <input type="text" name="nome" id="input-nome-unico" placeholder="Ex: Gi do RH" />
-          <textarea name="nomes_lote" id="input-nome-lote" placeholder="Cole a lista de nomes aqui (um por linha)..." rows="5" style="display: none; width: 100%; resize: vertical; padding: 0.5rem; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);"></textarea>
+          <label id="label-nome">Nome do Aluno</label>
+          <textarea id="input-nome-unico" name="nome" placeholder="Ex: Gi do RH" rows="1" style="resize: none; min-height: 42px;"></textarea>
+          <textarea id="input-nome-lote" name="nomes_lote" rows="5" placeholder="João da Silva&#10;Maria Santos" style="display: none; margin-top: 4px;"></textarea>
         </div>
 
-        <!-- ALURA FIELDS -->
         <div class="field" id="group-curso">
           <label>Curso/Treinamento</label>
-          <input type="text" name="curso" />
+          <textarea id="curso" name="curso" placeholder="Nome do Curso" rows="1" style="resize: none; min-height: 42px;"></textarea>
         </div>
+
+        <div class="field" id="group-tema" style="display: none;">
+          <label>Tema</label>
+          <textarea id="tema-input" name="tema" placeholder="Ex: IA na Detecção de Ataques" rows="1" style="resize: none; min-height: 42px;"></textarea>
+        </div>
+
         <div class="form-row" id="row-alura">
           <div class="field">
-            <label>Carga Horária</label>
-            <input type="text" name="carga" />
+            <label id="label-carga">Carga Horária <span id="carga-prefix-hint" style="font-weight:400; color: var(--c-muted); display:none; font-size: 0.85em; margin-top: 2px;">("Carga horária:" é automático)</span></label>
+            <textarea id="carga" name="carga" placeholder="Ex: 8h" rows="1" style="resize: none; min-height: 42px;"></textarea>
           </div>
           <div class="field">
-            <label>Data</label>
-            <input type="text" name="data" />
+            <label id="label-data">Data <span id="data-prefix-hint" style="font-weight:400; color: var(--c-muted); display:none; font-size: 0.85em; margin-top: 2px;">(só a data — é automático)</span></label>
+            <textarea id="data" name="data" placeholder="Ex: 10 de Novembro" rows="1" style="resize: none; min-height: 42px;"></textarea>
           </div>
         </div>
 
-        <!-- IKATED FIELDS -->
-        <div class="field" id="group-tema" style="display: none;">
-          <label>Texto do Tema</label>
-          <input type="text" name="tema" placeholder="Certificamos que participou do IKATED: Integração de IA em Sistemas" />
-        </div>
         <div class="field" id="group-apresentador" style="display: none;">
-          <label>Texto do Apresentador e Carga</label>
-          <input type="text" name="apresentador" placeholder="Ministrado por Deyvisson Tavares Carga horária: 1 horas" />
+          <label>Ministrado por <span style="font-weight:400; color: var(--c-muted);">(só o nome)</span></label>
+          <textarea id="apresentador" name="apresentador" placeholder="Ex: Deyvisson Tavares" rows="1" style="resize: none; min-height: 42px;"></textarea>
         </div>
-        
-        <!-- GENERIC FIELDS -->
-        <div id="dynamic-fields-container"></div>
-        <button type="button" id="btn-add-field" class="btn btn--outline" style="display: none; width: 100%; margin-top: 1rem;">+ Adicionar Campo Extra</button>
 
-        <!-- HIDDEN CONFIG FOR BATCH GENERATION -->
-        <input type="hidden" name="current_config" id="hidden-config" value="{}">
+        <div id="dynamic-fields-container"></div>
+
+        <input type="hidden" id="hidden-config" name="config" />
+
+        <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="display: flex; gap: 0.5rem; width: 100%;">
+            <button id="btn-toggle-edit" type="button" class="btn" style="flex: 1; background: transparent; color: var(--c-text); border: 1.5px solid var(--c-border);">Modo Edição</button>
+            <button id="btn-add-field" type="button" class="btn" style="display:none; flex: 1; background: transparent; color: var(--c-primary); border: 1.5px dashed var(--c-primary);">+ Campo Extra</button>
+          </div>
+          <div style="display: flex; gap: 0.5rem; width: 100%;">
+            <button id="save-default-certificado" type="button" class="btn btn--primary" style="display:none; flex: 1;">Salvar como Padrão</button>
+            <button id="btn-upload-bg" type="button" class="btn btn--outline" style="display:none; flex: 1;">Trocar Fundo</button>
+          </div>
+          <input type="file" id="upload-bg-certificado" accept="image/*" style="display:none;" />
+        </div>
+
       </form>
 
     </aside>
 
     <!-- COL 3: Painel de Pré-visualização -->
-    <section class="panel panel--preview" id="previews-container" style="position: relative;">
+    <section class="panel panel--preview" id="previews-container">
       
-      <div id="cert-props-panel" style="display: none; position: absolute; top: 70px; right: 20px; background: var(--c-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--c-border); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; width: 220px;">
-        <div style="font-size: 13px; font-weight: bold; margin-bottom: 12px; color: var(--c-fg);">Propriedades do Texto</div>
+      <style>
+        .prop-btn {
+          background: transparent; border: 1px solid transparent; border-radius: 4px;
+          color: var(--c-text); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-family: 'Exo-Regular', sans-serif; font-size: 14px;
+        }
+        .prop-btn:hover { background: rgba(0,0,0,0.05); border-color: var(--c-border); }
+        .prop-btn.active { background: rgba(9, 168, 201, 0.1); border-color: var(--c-primary); color: var(--c-primary); }
+      </style>
+      <div id="cert-props-panel" style="display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--c-bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--c-border); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; flex-direction: row; align-items: center; gap: 8px;">
         
-        <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-          <label style="font-size: 12px; color: var(--c-fg-muted);">Cor do Texto:</label>
-          <input type="color" id="prop-color" value="#ffffff" style="width: 32px; height: 32px; border: none; cursor: pointer; padding: 0; border-radius: 8px; overflow: hidden; background: transparent;">
-        </div>
+        <!-- Font Family -->
+        <select id="prop-font" style="width: 130px; flex-shrink: 0; padding: 6px; border: 1px solid var(--c-border); border-radius: 4px; background: transparent; color: var(--c-text); font-family: 'Exo-Regular', sans-serif; cursor: pointer;">
+          <option value="'Exo-Regular', sans-serif">Exo</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier</option>
+        </select>
+
+        <!-- Font Size -->
+        <select id="prop-size-select" style="width: 60px; flex-shrink: 0; padding: 6px; border: 1px solid var(--c-border); border-radius: 4px; background: transparent; color: var(--c-text); cursor: pointer;">
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+          <option value="24">24</option>
+          <option value="28">28</option>
+          <option value="32">32</option>
+          <option value="36">36</option>
+          <option value="40">40</option>
+          <option value="44">44</option>
+          <option value="48">48</option>
+          <option value="54">54</option>
+          <option value="60">60</option>
+          <option value="66">66</option>
+          <option value="72">72</option>
+          <option value="80">80</option>
+          <option value="96">96</option>
+        </select>
+
+        <div style="width: 1px; height: 24px; background: var(--c-border); margin: 0 4px;"></div>
+
+        <!-- Formatting Buttons -->
+        <button id="prop-bold" class="prop-btn" title="Negrito">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>
+        </button>
+        <button id="prop-italic" class="prop-btn" title="Itálico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>
+        </button>
+        <button id="prop-underline" class="prop-btn" title="Sublinhado">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>
+        </button>
         
-        <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-          <label style="font-size: 12px; color: var(--c-fg-muted);">Tamanho (px):</label>
-          <input type="number" id="prop-size" value="50" style="width: 60px; padding: 4px; border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-bg); color: var(--c-fg);">
+        <div style="width: 1px; height: 24px; background: var(--c-border); margin: 0 4px;"></div>
+
+        <!-- Color Picker & HEX Input -->
+        <style>
+          input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+          input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+          input[type="color"]::-moz-color-swatch { border: none; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+        </style>
+        <div style="display: flex; align-items: center; border: 1px solid var(--c-border); border-radius: 6px; padding: 3px; background: var(--c-bg);" title="Cor do Texto">
+          <input type="color" id="prop-color" value="#ffffff" style="width: 24px; height: 24px; border: none; cursor: pointer; padding: 0; background: transparent;">
+          <input type="text" id="prop-color-hex" value="#ffffff" maxlength="7" style="width: 65px; border: none; background: transparent; color: var(--c-text); font-size: 13px; font-family: 'Courier New', monospace; text-align: center; outline: none;">
         </div>
-        
-        <div style="border-top: 1px solid var(--c-border); margin: 10px -15px; padding: 10px 15px 0 15px;">
-          <label style="font-size: 12px; color: var(--c-fg); display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 10px;">
-            <input type="checkbox" id="prop-show-label">
-            Mostrar Título Fixo acima
-          </label>
-          
-          <div id="prop-label-color-group" style="display: none; align-items: center; justify-content: space-between;">
-            <label style="font-size: 12px; color: var(--c-fg-muted);">Cor do Título:</label>
-            <input type="color" id="prop-label-color" value="#08cfff" style="width: 32px; height: 32px; border: none; cursor: pointer; padding: 0; border-radius: 8px; overflow: hidden; background: transparent;">
-          </div>
+
+        <div style="width: 1px; height: 24px; background: var(--c-border); margin: 0 4px;"></div>
+
+        <!-- Alignment -->
+        <div style="display: flex; gap: 2px;" title="Alinhamento do Texto">
+          <button id="prop-align-left" class="prop-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
+          </button>
+          <button id="prop-align-center" class="prop-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="18" y1="18" x2="6" y2="18"></line></svg>
+          </button>
+          <button id="prop-align-right" class="prop-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
+          </button>
         </div>
+
+        <div style="width: 1px; height: 24px; background: var(--c-border); margin: 0 4px;"></div>
+
+        <!-- Max Width -->
+        <div style="display: flex; align-items: center; gap: 4px;" title="Largura Máxima (para quebra automática)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+          <input type="number" id="prop-max-width" placeholder="Auto" style="width: 55px; padding: 4px; border: 1px solid var(--c-border); border-radius: 4px; background: transparent; color: var(--c-text); text-align: center; font-size: 13px;">
+        </div>
+
       </div>
       
       <!-- AGENDA PREVIEW -->
@@ -241,17 +314,22 @@
       <div id="preview-certificado" class="tool-preview">
         <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
           <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-          <div class="panel__title panel__title--preview" style="margin-bottom: 0;">Pré-visualização Certificado</div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; align-items: center;">
-              <input type="file" id="upload-bg-certificado" accept="image/png, image/jpeg" style="display: none;">
-              <button type="button" id="btn-upload-bg" class="btn" style="display: none; background: transparent; border: 1px solid var(--c-primary); color: var(--c-primary);">Trocar Fundo</button>
-              <button type="button" id="save-default-certificado" class="btn" style="display: none; background: transparent; border: 1px solid var(--c-primary); color: var(--c-primary);">Salvar como Padrão</button>
-              <button type="button" id="reset-certificado" class="btn" style="display: none; background: transparent; border: 1px solid var(--c-border); color: var(--c-fg);">Redefinir posições</button>
-              <button type="button" id="btn-toggle-edit" class="btn" style="background: transparent; border: 1px solid var(--c-fg); color: var(--c-fg);">Modo Edição</button>
-              <button type="button" id="export-certificado" class="btn btn--primary" disabled>Exportar PNG</button>
+            <div class="panel__title panel__title--preview" style="margin-bottom: 0;">
+              Pré-visualização
+              <span id="preview-status-cert" style="font-size: 0.75rem; margin-left: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: var(--c-bg); color: var(--c-muted); font-weight: normal; display:none;"></span>
+            </div>
+            <button id="btn-baixar-cert" class="btn btn--primary" style="display: inline-block;">
+              Baixar Certificado
+            </button>
           </div>
-        </div>
-          <div class="generated-preview-wrapper" id="render-certificado" style="display:none;"></div>
+          
+          <div class="generated-preview-wrapper" id="render-certificado" style="width: 100%;">
+              <div id="empty-preview-cert" class="empty-state">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                  <p>Nenhum certificado gerado ainda.<br>Preencha os campos e clique em gerar.</p>
+              </div>
+              <img id="preview-image-cert" alt="Prévia do certificado gerado" src="#" style="display: none; width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          </div>
         </div>
       </div>
 
@@ -271,7 +349,8 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='script.js') }}?v=11"></script>
-  <script src="{{ url_for('static', filename='certificado_drag.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='script_clean.js') }}?v=2"></script>
+  <script src="{{ url_for('static', filename='script.js') }}?v=2"></script>
+  <script src="{{ url_for('static', filename='certificado_drag.js') }}?v=3"></script>
 </body>
 </html>

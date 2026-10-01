@@ -3,25 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentBlobData = {};
 
   /* ==========================================
-     NAVEGAÇÃO DAS ABAS
+     NAVEGAÇÃO DAS ABAS — gerenciada por script_clean.js
      ========================================== */
-  const navBtns = document.querySelectorAll(".nav-btn");
-  const toolForms = document.querySelectorAll(".tool-form");
-  const toolPreviews = document.querySelectorAll(".tool-preview");
-
-  navBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-target");
-
-      navBtns.forEach(b => b.classList.remove("active"));
-      toolForms.forEach(f => f.classList.remove("active"));
-      toolPreviews.forEach(p => p.classList.remove("active"));
-
-      btn.classList.add("active");
-      document.getElementById(`form-${target}`).classList.add("active");
-      document.getElementById(`preview-${target}`).classList.add("active");
-    });
-  });
 
   /* ==========================================
      LÓGICA - AGENDA DE INTEGRAÇÃO

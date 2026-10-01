@@ -1,0 +1,150 @@
+{
+    "ikated": {
+        "cert-nome-txt": {
+            "top": "319.07px",
+            "left": "149.626px",
+            "transform": "",
+            "color": "rgb(243, 245, 249)",
+            "fontSize": "95px",
+            "fontFamily": "Exo-Regular, sans-serif",
+            "fontWeight": "400",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "textAlign": "start",
+            "maxWidth": "1384.77px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-curso-txt": {
+            "top": "512px",
+            "left": "150px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "42px",
+            "fontFamily": "Exo-Regular, sans-serif",
+            "fontWeight": "400",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "textAlign": "start",
+            "maxWidth": "",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-carga-txt": {
+            "top": "940px",
+            "left": "841.999px",
+            "transform": "translateX(-50%)",
+            "color": "rgb(243, 245, 249)",
+            "fontSize": "36px",
+            "fontFamily": "Exo-Regular, sans-serif",
+            "fontWeight": "400",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "textAlign": "center",
+            "maxWidth": "",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-data-txt": {
+            "top": "800px",
+            "left": "842px",
+            "transform": "translateX(-50%)",
+            "color": "rgb(243, 245, 249)",
+            "fontSize": "36px",
+            "fontFamily": "Exo-Regular, sans-serif",
+            "fontWeight": "400",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "textAlign": "center",
+            "maxWidth": "",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-tema-txt": {
+            "top": "523.583px",
+            "left": "842px",
+            "transform": "translateX(-50%)",
+            "color": "rgb(243, 245, 249)",
+            "fontSize": "42px",
+            "fontFamily": "Exo-Regular, sans-serif",
+            "fontWeight": "bold",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "textAlign": "center",
+            "maxWidth": "1346.97px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-apresentador-txt": {
+            "top": "871.541px",
+            "left": "842px",
+            "transform": "translateX(-50%)",
+            "color": "rgb(243, 245, 249)",
+            "fontSize": "36px",
+            "fontFamily": "Exo-Regular, sans-serif",
+            "fontWeight": "bold",
+            "fontStyle": "normal",
+            "textDecoration": "none",
+            "textAlign": "center",
+            "maxWidth": "1042.64px",
+            "showLabel": false,
+            "labelColor": ""
+        }
+    },
+    "alura": {
+        "cert-nome-txt": {
+            "top": "232.911px",
+            "left": "495.938px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "95px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-curso-txt": {
+            "top": "512px",
+            "left": "350px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "44px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-carga-txt": {
+            "top": "650px",
+            "left": "350px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "48px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-data-txt": {
+            "top": "650px",
+            "left": "720px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "48px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-tema-txt": {
+            "top": "512px",
+            "left": "350px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "44px",
+            "showLabel": false,
+            "labelColor": ""
+        },
+        "cert-apresentador-txt": {
+            "top": "720px",
+            "left": "350px",
+            "transform": "",
+            "color": "rgb(255, 255, 255)",
+            "fontSize": "40px",
+            "showLabel": false,
+            "labelColor": ""
+        }
+    }
+}

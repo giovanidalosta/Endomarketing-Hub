@@ -4,18 +4,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!renderCert) return;
     
     renderCert.style.display = 'block';
+    
+    let isEditMode = false;
+    let activePropsEl = null;
 
     // Build the canvas
     renderCert.innerHTML = `
         <div class="cert-workspace" id="cert-workspace">
             <div class="cert-canvas-wrapper" id="cert-wrapper">
                 <div class="cert-canvas" id="cert-canvas">
-                    <div id="cert-nome-txt" class="draggable-text">Nome do Aluno</div>
-                    <div id="cert-curso-txt" class="draggable-text">Nome do Curso</div>
-                    <div id="cert-carga-txt" class="draggable-text">Carga Horária</div>
-                    <div id="cert-data-txt" class="draggable-text">Data</div>
-                    <div id="cert-tema-txt" class="draggable-text" style="display: none;">Tema</div>
-                    <div id="cert-apresentador-txt" class="draggable-text" style="display: none;">Apresentador</div>
+                    <div id="cert-nome-txt" class="draggable-text" data-label="Nome" data-placeholder="Nome do Aluno">Nome do Aluno</div>
+                    <div id="cert-curso-txt" class="draggable-text" data-label="Curso" data-placeholder="Nome do Curso">Nome do Curso</div>
+                    <div id="cert-carga-txt" class="draggable-text" data-label="Carga Horária" data-placeholder="8h">Carga Horária</div>
+                    <div id="cert-data-txt" class="draggable-text" data-label="Conclusão" data-placeholder="01 de Outubro de 2026">Data de Conclusão</div>
+                    <div id="cert-tema-txt" class="draggable-text" data-label="Tema" data-placeholder="Tema do IKATED" style="display: none;">Tema</div>
+                    <div id="cert-apresentador-txt" class="draggable-text" data-label="Apresentador" data-placeholder="Nome do Apresentador" data-prefix="Ministrado por " style="display: none;">Ministrado por </div>
                     <div id="snap-line-x" class="snap-line-x"></div>
                     <div id="snap-line-y" class="snap-line-y"></div>
                 </div>
@@ -53,12 +56,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Sync inputs to the text elements
     const inputs = {
-        'nome': document.querySelector('#form-certificado input[name="nome"]'),
-        'curso': document.querySelector('#form-certificado input[name="curso"]'),
-        'carga': document.querySelector('#form-certificado input[name="carga"]'),
-        'data': document.querySelector('#form-certificado input[name="data"]'),
-        'tema': document.querySelector('#form-certificado input[name="tema"]'),
-        'apresentador': document.querySelector('#form-certificado input[name="apresentador"]')
+        'nome':        document.querySelector('#form-certificado [name="nome"]'),
+        'curso':       document.querySelector('#form-certificado [name="curso"]'),
+        'carga':       document.querySelector('#form-certificado [name="carga"]'),
+        'data':        document.querySelector('#form-certificado [name="data"]'),
+        'tema':        document.querySelector('#form-certificado [name="tema"]'),
+        'apresentador':document.querySelector('#form-certificado [name="apresentador"]')
     };
 
     const texts = {
@@ -83,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const dynFields = document.getElementById('dynamic-fields-container');
         const group = document.createElement('div');
         group.className = 'field';
-        group.innerHTML = `<label>${label}</label><input type="text" name="${fieldId}" id="input-${fieldId}" class="form__input" placeholder="Preencha o campo..." />`;
+        group.innerHTML = `<label>${label}</label><textarea name="${fieldId}" id="input-${fieldId}" placeholder="Preencha o campo..." rows="1" style="resize: none; min-height: 42px; width: 100%;"></textarea>`;
         if (dynFields) dynFields.appendChild(group);
         
         const canvasEl = document.getElementById('cert-canvas');
@@ -97,6 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
             newText.style.transform = conf.transform || 'none';
             if (conf.color) newText.style.color = conf.color;
             if (conf.fontSize) newText.style.fontSize = conf.fontSize;
+            if (conf.fontFamily) newText.style.fontFamily = conf.fontFamily;
+            if (conf.fontWeight) newText.style.fontWeight = conf.fontWeight;
+            if (conf.fontStyle) newText.style.fontStyle = conf.fontStyle;
+            if (conf.textDecoration) newText.style.textDecoration = conf.textDecoration;
+            if (conf.textAlign) newText.style.textAlign = conf.textAlign;
+            if (conf.maxWidth) newText.style.maxWidth = conf.maxWidth;
             if (conf.showLabel) newText.dataset.showLabel = conf.showLabel;
         } else {
             newText.style.top = '400px';
@@ -139,6 +148,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         el.style.transform = conf.transform || 'none';
                         if (conf.color) el.style.color = conf.color;
                         if (conf.fontSize) el.style.fontSize = conf.fontSize;
+                        if (conf.fontFamily) el.style.fontFamily = conf.fontFamily;
+                        if (conf.fontWeight) el.style.fontWeight = conf.fontWeight;
+                        if (conf.fontStyle) el.style.fontStyle = conf.fontStyle;
+                        if (conf.textDecoration) el.style.textDecoration = conf.textDecoration;
+                        if (conf.textAlign) el.style.textAlign = conf.textAlign;
+                        if (conf.maxWidth) el.style.maxWidth = conf.maxWidth;
+                        else el.style.maxWidth = 'none';
                         if (conf.showLabel) el.dataset.showLabel = conf.showLabel;
                         
                         // Re-render HTML with new properties
@@ -159,31 +175,100 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadConfigForModel();
 
+    function addResizeHandles(el) {
+        el.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
+        if (!isEditMode || el !== activePropsEl) return;
+        
+        const handleRight = document.createElement('div');
+        handleRight.className = 'cert-resize-handle right';
+        handleRight.onmousedown = (e) => initResize(e, el, 'right');
+        
+        const handleLeft = document.createElement('div');
+        handleLeft.className = 'cert-resize-handle left';
+        handleLeft.onmousedown = (e) => initResize(e, el, 'left');
+        
+        el.appendChild(handleRight);
+        el.appendChild(handleLeft);
+    }
+
+    function initResize(e, el, direction) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const startX = e.clientX;
+        const startWidth = el.offsetWidth;
+        const startLeft = el.offsetLeft;
+        const wrapper = document.getElementById('cert-wrapper');
+        const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
+        
+        function onMouseMove(moveEvent) {
+            const dx = (moveEvent.clientX - startX) / scale;
+            if (direction === 'right') {
+                el.style.width = Math.max(50, startWidth + dx) + 'px';
+                el.style.maxWidth = el.style.width;
+            } else {
+                const newWidth = Math.max(50, startWidth - dx);
+                const dxReal = startWidth - newWidth;
+                el.style.width = newWidth + 'px';
+                el.style.maxWidth = el.style.width;
+                el.style.left = (startLeft + dxReal) + 'px';
+            }
+        }
+        
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            const inputMaxWidth = document.getElementById('prop-max-width');
+            if (inputMaxWidth) inputMaxWidth.value = parseInt(el.style.width);
+        }
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }
+
     function updateTextHtml(el, val) {
         if (val !== undefined) {
             el.setAttribute('data-value', val);
         } else {
             val = el.getAttribute('data-value') || el.getAttribute('data-placeholder') || el.getAttribute('data-label') || '';
         }
-        
-        const label = el.getAttribute('data-label') || 'CAMPO';
-        const showLabel = el.dataset.showLabel === 'true';
+
+        const prefix     = el.getAttribute('data-prefix') || '';
+        const label      = el.getAttribute('data-label') || 'CAMPO';
+        const showLabel  = el.dataset.showLabel === 'true';
         const labelColor = el.dataset.labelColor || '#08CFFF';
-        
+        const displayed  = prefix + val;
+
         if (showLabel) {
-            el.innerHTML = `<span style="display:block; font-size:40%; color:${labelColor}; text-transform:uppercase; margin-bottom: 5px; font-weight: bold; font-family: 'Exo-Regular', sans-serif;">${label}</span><span>${val}</span>`;
+            el.innerHTML = `<span style="display:block; font-size:40%; color:${labelColor}; text-transform:uppercase; margin-bottom: 5px; font-weight: bold; font-family: 'Exo-Regular', sans-serif;">${label}</span><span>${displayed}</span>`;
         } else {
-            el.textContent = val;
+            el.textContent = displayed;
         }
+        
+        addResizeHandles(el);
     }
 
     Object.keys(inputs).forEach(key => {
         const inp = inputs[key];
         if (inp) {
-            texts[key].setAttribute('data-label', texts[key].textContent);
-            texts[key].setAttribute('data-placeholder', texts[key].textContent);
-            texts[key].setAttribute('data-value', texts[key].textContent);
-            
+            // Se o elemento tem data-prefix, o textContent inicial pode já conter o prefixo
+            // (ex: "Ministrado por " ou "Carga horária: "). Precisamos armazenar só o valor puro.
+            const elPrefix = texts[key].getAttribute('data-prefix') || '';
+            const rawText  = texts[key].textContent || '';
+            const pureText = (elPrefix && rawText.startsWith(elPrefix))
+                ? rawText.slice(elPrefix.length).trim()
+                : rawText.trim();
+
+            // Preserva data-placeholder e data-label se já definidos no HTML
+            if (!texts[key].getAttribute('data-placeholder')) {
+                texts[key].setAttribute('data-placeholder', pureText);
+            }
+            if (!texts[key].getAttribute('data-label')) {
+                texts[key].setAttribute('data-label', pureText);
+            }
+            texts[key].setAttribute('data-value', pureText);
+            updateTextHtml(texts[key], pureText);
+
             inp.addEventListener('input', () => {
                 updateTextHtml(texts[key], inp.value || texts[key].getAttribute('data-placeholder'));
                 if (key === 'nome' && !texts['nome'].dataset.moved) {
@@ -221,34 +306,56 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.querySelector('.field:first-child').style.display = 'block'; // show carga
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
-            
+
             texts['curso'].style.display = 'block';
             texts['carga'].style.display = 'block';
             texts['data'].style.display = 'block';
             texts['tema'].style.display = 'none';
             texts['apresentador'].style.display = 'none';
-            
+
+            // Alura: sem prefixo nos campos — labels já estão na imagem base
+            texts['carga'].removeAttribute('data-prefix');
+            texts['data'].removeAttribute('data-prefix');
+            inputs['data'].placeholder = 'Ex: 01 de Outubro de 2026';
+            texts['data'].setAttribute('data-placeholder', '01 de Outubro de 2026');
+            if (!inputs['data'].value) updateTextHtml(texts['data'], texts['data'].getAttribute('data-placeholder'));
+            const hintAlura = document.getElementById('data-prefix-hint');
+            if (hintAlura) hintAlura.style.display = 'none';
+            const cargaHintAlura = document.getElementById('carga-prefix-hint');
+            if (cargaHintAlura) cargaHintAlura.style.display = 'none';
+
             radioLote.disabled = true;
             lblModeLote.style.color = 'var(--c-fg-muted)';
             if (mode === 'lote') document.querySelector('input[value="unico"]').checked = true;
         } else if (modelo === 'ikated') {
             grpCurso.style.display = 'none';
             rowAlura.style.display = 'flex';
-            rowAlura.querySelector('.field:first-child').style.display = 'none'; // hide carga
-            
+            rowAlura.querySelector('.field:first-child').style.display = 'block'; // mostrar carga no IKATED
+
             grpTema.style.display = 'block';
             grpApres.style.display = 'block';
-            
+
             texts['curso'].style.display = 'none';
-            texts['carga'].style.display = 'none';
+            texts['carga'].style.display = 'block';
             texts['data'].style.display = 'block';
             texts['tema'].style.display = 'block';
             texts['apresentador'].style.display = 'block';
-            
-            inputs['data'].placeholder = "Concluído no dia 30 de setembro de 2025";
-            texts['data'].setAttribute('data-placeholder', "Concluído no dia 30 de setembro de 2025");
-            if (!inputs['data'].value) texts['data'].textContent = "Concluído no dia 30 de setembro de 2025";
-            
+
+            // IKATED: prefixos fixos — usuário digita só o valor
+            texts['carga'].setAttribute('data-prefix', 'Carga horária: ');
+            inputs['carga'].placeholder = 'Ex: 8h';
+            texts['carga'].setAttribute('data-placeholder', '8h');
+            if (!inputs['carga'].value) updateTextHtml(texts['carga'], texts['carga'].getAttribute('data-placeholder'));
+
+            texts['data'].setAttribute('data-prefix', 'Concluído no dia ');
+            inputs['data'].placeholder = 'Ex: 28 de agosto de 2025';
+            texts['data'].setAttribute('data-placeholder', '28 de agosto de 2025');
+            if (!inputs['data'].value) updateTextHtml(texts['data'], texts['data'].getAttribute('data-placeholder'));
+            const hintIkated = document.getElementById('data-prefix-hint');
+            if (hintIkated) hintIkated.style.display = 'block';
+            const cargaHintIkated = document.getElementById('carga-prefix-hint');
+            if (cargaHintIkated) cargaHintIkated.style.display = 'block';
+
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
         } else if (modelo === 'generico') {
@@ -256,13 +363,13 @@ document.addEventListener("DOMContentLoaded", () => {
             rowAlura.style.display = 'none';
             grpTema.style.display = 'none';
             grpApres.style.display = 'none';
-            
+
             texts['curso'].style.display = 'none';
             texts['carga'].style.display = 'none';
             texts['data'].style.display = 'none';
             texts['tema'].style.display = 'none';
             texts['apresentador'].style.display = 'none';
-            
+
             radioLote.disabled = false;
             lblModeLote.style.color = 'var(--c-fg)';
         }
@@ -288,7 +395,6 @@ document.addEventListener("DOMContentLoaded", () => {
         applyEditMode();
     }
     
-    let isEditMode = false;
     const btnToggleEdit = document.getElementById('btn-toggle-edit');
     if (btnToggleEdit) {
         btnToggleEdit.addEventListener('click', () => {
@@ -311,22 +417,20 @@ document.addEventListener("DOMContentLoaded", () => {
     function applyEditMode() {
         const btnAddField = document.getElementById('btn-add-field');
         const saveDefaultBtn = document.getElementById('save-default-certificado');
-        const resetBtn = document.getElementById('reset-certificado');
         const btnUploadBg = document.getElementById('btn-upload-bg');
         const propsPanel = document.getElementById('cert-props-panel');
         
         if (isEditMode) {
             if (btnAddField) btnAddField.style.display = 'block';
-            if (saveDefaultBtn) saveDefaultBtn.style.display = 'inline-block';
-            if (resetBtn) resetBtn.style.display = 'inline-block';
-            if (btnUploadBg) btnUploadBg.style.display = 'inline-block';
+            if (saveDefaultBtn) saveDefaultBtn.style.display = 'block';
+            if (btnUploadBg) btnUploadBg.style.display = 'block';
             document.querySelectorAll('.draggable-text').forEach(el => el.classList.add('edit-mode-active'));
         } else {
             if (btnAddField) btnAddField.style.display = 'none';
             if (saveDefaultBtn) saveDefaultBtn.style.display = 'none';
-            if (resetBtn) resetBtn.style.display = 'none';
             if (btnUploadBg) btnUploadBg.style.display = 'none';
             if (propsPanel) propsPanel.style.display = 'none';
+            document.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
             activePropsEl = null;
             document.querySelectorAll('.draggable-text').forEach(el => el.classList.remove('edit-mode-active'));
         }
@@ -463,32 +567,108 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const propsPanel = document.getElementById('cert-props-panel');
+    const inputFont = document.getElementById('prop-font');
+    const inputSize = document.getElementById('prop-size-select');
+    const btnBold = document.getElementById('prop-bold');
+    const btnItalic = document.getElementById('prop-italic');
+    const btnUnderline = document.getElementById('prop-underline');
     const inputColor = document.getElementById('prop-color');
-    const inputSize = document.getElementById('prop-size');
-    const inputShowLabel = document.getElementById('prop-show-label');
-    const inputLabelColor = document.getElementById('prop-label-color');
-    const groupLabelColor = document.getElementById('prop-label-color-group');
-    let activePropsEl = null;
-
-    if (inputColor && inputSize && inputShowLabel) {
-        inputColor.addEventListener('input', (e) => {
-            if (activePropsEl) activePropsEl.style.color = e.target.value;
+    const inputColorHex = document.getElementById('prop-color-hex');
+    const btnAlignLeft = document.getElementById('prop-align-left');
+    const btnAlignCenter = document.getElementById('prop-align-center');
+    const btnAlignRight = document.getElementById('prop-align-right');
+    
+    if (propsPanel) {
+        if (inputFont) inputFont.addEventListener('change', (e) => {
+            if (activePropsEl) activePropsEl.style.fontFamily = e.target.value;
         });
-        inputSize.addEventListener('input', (e) => {
+        if (inputSize) inputSize.addEventListener('change', (e) => {
             if (activePropsEl) activePropsEl.style.fontSize = e.target.value + 'px';
         });
-        inputShowLabel.addEventListener('change', (e) => {
-            if (activePropsEl) {
-                activePropsEl.dataset.showLabel = e.target.checked ? 'true' : 'false';
-                if (groupLabelColor) groupLabelColor.style.display = e.target.checked ? 'flex' : 'none';
-                updateTextHtml(activePropsEl);
-            }
+        if (btnBold) btnBold.addEventListener('click', () => {
+            if (!activePropsEl) return;
+            const isBold = activePropsEl.style.fontWeight === 'bold' || parseInt(window.getComputedStyle(activePropsEl).fontWeight) >= 700;
+            activePropsEl.style.fontWeight = isBold ? 'normal' : 'bold';
+            btnBold.classList.toggle('active', !isBold);
         });
-        if (inputLabelColor) {
-            inputLabelColor.addEventListener('input', (e) => {
-                if (activePropsEl) {
-                    activePropsEl.dataset.labelColor = e.target.value;
-                    updateTextHtml(activePropsEl);
+        if (btnItalic) btnItalic.addEventListener('click', () => {
+            if (!activePropsEl) return;
+            const isItalic = window.getComputedStyle(activePropsEl).fontStyle === 'italic';
+            activePropsEl.style.fontStyle = isItalic ? 'normal' : 'italic';
+            btnItalic.classList.toggle('active', !isItalic);
+        });
+        if (btnUnderline) btnUnderline.addEventListener('click', () => {
+            if (!activePropsEl) return;
+            const isUnderline = window.getComputedStyle(activePropsEl).textDecorationLine === 'underline';
+            activePropsEl.style.textDecoration = isUnderline ? 'none' : 'underline';
+            btnUnderline.classList.toggle('active', !isUnderline);
+        });
+        
+        if (inputColor) inputColor.addEventListener('input', (e) => {
+            if (activePropsEl) activePropsEl.style.color = e.target.value;
+            if (inputColorHex) inputColorHex.value = e.target.value;
+        });
+        
+        if (inputColorHex) {
+            inputColorHex.addEventListener('input', (e) => {
+                let val = e.target.value.trim();
+                if (!val.startsWith('#') && val.length > 0) val = '#' + val;
+                if (/^#[0-9A-Fa-f]{6}$/i.test(val)) {
+                    if (activePropsEl) activePropsEl.style.color = val;
+                    if (inputColor) inputColor.value = val;
+                }
+            });
+            inputColorHex.addEventListener('blur', (e) => {
+                let val = e.target.value.trim();
+                if (!val.startsWith('#')) val = '#' + val;
+                if (!/^#[0-9A-Fa-f]{6}$/i.test(val)) {
+                    e.target.value = inputColor ? inputColor.value : '#ffffff';
+                }
+            });
+        }
+
+        const alignBtns = { left: btnAlignLeft, center: btnAlignCenter, right: btnAlignRight };
+        Object.entries(alignBtns).forEach(([align, btn]) => {
+            if (btn) btn.addEventListener('click', () => {
+                if (!activePropsEl) return;
+                
+                // Get visual coordinates before changing
+                const rect = activePropsEl.getBoundingClientRect();
+                const canvasEl = document.getElementById('cert-canvas');
+                const parentRect = canvasEl.getBoundingClientRect();
+                const wrapper = document.getElementById('cert-wrapper');
+                const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
+
+                activePropsEl.style.textAlign = align;
+
+                let newLeft;
+                if (align === 'left') {
+                    activePropsEl.style.transform = 'none';
+                    newLeft = (rect.left - parentRect.left) / scale;
+                } else if (align === 'center') {
+                    activePropsEl.style.transform = 'translateX(-50%)';
+                    newLeft = (rect.left + rect.width/2 - parentRect.left) / scale;
+                } else if (align === 'right') {
+                    activePropsEl.style.transform = 'translateX(-100%)';
+                    newLeft = (rect.right - parentRect.left) / scale;
+                }
+                
+                activePropsEl.style.left = newLeft + 'px';
+
+                Object.values(alignBtns).forEach(b => b && b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        const inputMaxWidth = document.getElementById('prop-max-width');
+        if (inputMaxWidth) {
+            inputMaxWidth.addEventListener('input', (e) => {
+                if (!activePropsEl) return;
+                const val = parseInt(e.target.value);
+                if (val && !isNaN(val)) {
+                    activePropsEl.style.maxWidth = val + 'px';
+                } else {
+                    activePropsEl.style.maxWidth = 'none';
                 }
             });
         }
@@ -501,6 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const el = e.target.closest('.draggable-text');
         
         if (!el && !isPanelClick) {
+            document.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
             if (propsPanel) propsPanel.style.display = 'none';
             activePropsEl = null;
             return;
@@ -510,27 +691,63 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Element clicked, populate and show panel
         activePropsEl = el;
+        document.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
+        addResizeHandles(el);
+        
         if (propsPanel) {
-            propsPanel.style.display = 'block';
+            propsPanel.style.display = 'flex';
             
             // Populate color
             let color = window.getComputedStyle(el).color;
             if (color.startsWith('rgb')) {
                 const rgb = color.match(/\d+/g);
-                color = `#${Number(rgb[0]).toString(16).padStart(2, '0')}${Number(rgb[1]).toString(16).padStart(2, '0')}${Number(rgb[2]).toString(16).padStart(2, '0')}`;
+                if (rgb && rgb.length >= 3) {
+                    color = `#${Number(rgb[0]).toString(16).padStart(2, '0')}${Number(rgb[1]).toString(16).padStart(2, '0')}${Number(rgb[2]).toString(16).padStart(2, '0')}`;
+                }
             }
-            inputColor.value = color;
+            if (inputColor) inputColor.value = color;
+            if (inputColorHex) inputColorHex.value = color;
             
             // Populate size
             let size = window.getComputedStyle(el).fontSize;
-            inputSize.value = parseInt(size) || 50;
+            if (inputSize) {
+                let sizeVal = parseInt(size) || 50;
+                let options = Array.from(inputSize.options).map(o => parseInt(o.value));
+                let closest = options.reduce((prev, curr) => Math.abs(curr - sizeVal) < Math.abs(prev - sizeVal) ? curr : prev);
+                inputSize.value = closest;
+            }
+
+            // Populate font
+            if (inputFont) {
+                let fontFamily = window.getComputedStyle(el).fontFamily;
+                let fontVal = "'Exo-Regular', sans-serif";
+                if (fontFamily.toLowerCase().includes('arial')) fontVal = "Arial, sans-serif";
+                else if (fontFamily.toLowerCase().includes('times')) fontVal = "'Times New Roman', serif";
+                else if (fontFamily.toLowerCase().includes('courier')) fontVal = "'Courier New', monospace";
+                inputFont.value = fontVal;
+            }
             
-            // Populate show label
-            inputShowLabel.checked = el.dataset.showLabel === 'true';
-            
-            // Populate label color
-            if (inputLabelColor) inputLabelColor.value = el.dataset.labelColor || '#08cfff';
-            if (groupLabelColor) groupLabelColor.style.display = inputShowLabel.checked ? 'flex' : 'none';
+            // Formatting buttons
+            if (btnBold) btnBold.classList.toggle('active', window.getComputedStyle(el).fontWeight === 'bold' || parseInt(window.getComputedStyle(el).fontWeight) >= 700);
+            if (btnItalic) btnItalic.classList.toggle('active', window.getComputedStyle(el).fontStyle === 'italic');
+            if (btnUnderline) btnUnderline.classList.toggle('active', window.getComputedStyle(el).textDecorationLine === 'underline');
+
+            // Align buttons
+            let align = window.getComputedStyle(el).textAlign || 'center';
+            if (btnAlignLeft) btnAlignLeft.classList.toggle('active', align === 'left' || align === 'start');
+            if (btnAlignCenter) btnAlignCenter.classList.toggle('active', align === 'center');
+            if (btnAlignRight) btnAlignRight.classList.toggle('active', align === 'right' || align === 'end');
+
+            // Max Width
+            const inputMaxWidth = document.getElementById('prop-max-width');
+            if (inputMaxWidth) {
+                let maxWidth = window.getComputedStyle(el).maxWidth;
+                if (maxWidth && maxWidth !== 'none') {
+                    inputMaxWidth.value = parseInt(maxWidth);
+                } else {
+                    inputMaxWidth.value = '';
+                }
+            }
         }
         
         historyStack.push(captureState());
@@ -619,7 +836,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Override the "Export" button for Certificado
-    const exportBtn = document.getElementById('export-certificado');
+    const exportBtn = document.getElementById('btn-baixar-cert');
     if (exportBtn) {
         exportBtn.disabled = false;
         exportBtn.textContent = 'Baixar Certificado';
@@ -722,29 +939,9 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    // Reset positions button
-    const resetBtn = document.getElementById('reset-certificado');
-    if (resetBtn) {
-        resetBtn.style.display = 'inline-block';
-        resetBtn.onclick = () => {
-            historyStack.push(captureState());
-            if (historyStack.length > 50) historyStack.shift();
-
-            document.querySelectorAll('.draggable-text').forEach(el => {
-                delete el.dataset.moved;
-                const conf = defaultConfig[el.id];
-                if (conf) {
-                    el.style.top = conf.top;
-                    el.style.left = conf.left;
-                    el.style.transform = conf.transform || 'none';
-                }
-            });
-        };
-    }
 
     const saveDefaultBtn = document.getElementById('save-default-certificado');
     if (saveDefaultBtn) {
-        saveDefaultBtn.style.display = 'inline-block';
         saveDefaultBtn.onclick = () => {
             const newConfig = {};
             document.querySelectorAll('.draggable-text').forEach(el => {
@@ -754,6 +951,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     transform: el.style.transform !== 'none' ? el.style.transform : '',
                     color: el.style.color || window.getComputedStyle(el).color,
                     fontSize: el.style.fontSize || window.getComputedStyle(el).fontSize,
+                    fontFamily: el.style.fontFamily || window.getComputedStyle(el).fontFamily,
+                    fontWeight: el.style.fontWeight || window.getComputedStyle(el).fontWeight,
+                    fontStyle: el.style.fontStyle || window.getComputedStyle(el).fontStyle,
+                    textDecoration: el.style.textDecoration || window.getComputedStyle(el).textDecoration,
+                    textAlign: el.style.textAlign || window.getComputedStyle(el).textAlign,
+                    maxWidth: el.style.maxWidth !== 'none' ? el.style.maxWidth : '',
                     showLabel: el.dataset.showLabel === 'true',
                     labelColor: el.dataset.labelColor || ''
                 };
@@ -778,7 +981,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnUploadBg = document.getElementById('btn-upload-bg');
     const inputUploadBg = document.getElementById('upload-bg-certificado');
     if (btnUploadBg && inputUploadBg) {
-        btnUploadBg.style.display = 'inline-block';
         btnUploadBg.onclick = () => inputUploadBg.click();
         
         inputUploadBg.onchange = (e) => {

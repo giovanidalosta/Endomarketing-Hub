@@ -56,7 +56,8 @@
     user-select: none;
     font-family: 'Exo-Regular', sans-serif;
     color: white;
-    white-space: nowrap;
+    white-space: pre-wrap;
+    word-break: break-word;
     border: 2px dashed transparent;
     padding: 5px;
 }
@@ -91,4 +92,22 @@
     font-size: 50px;
     top: 680px;
     left: 930px;
+}
+.cert-resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border: 1px solid #777;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+    z-index: 100;
+}
+.cert-resize-handle.right {
+    right: -5px;
+}
+.cert-resize-handle.left {
+    left: -5px;
 }
