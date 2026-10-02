@@ -195,6 +195,13 @@
     <!-- COL 3: Painel de Pré-visualização -->
     <section class="panel panel--preview" id="previews-container">
       
+      <!-- Controle de Zoom Global -->
+      <div id="zoom-controls" style="position: fixed; bottom: 40px; right: 40px; display: flex; align-items: center; gap: 4px; background: var(--c-surface); border: 1px solid var(--c-border); padding: 4px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000; transition: box-shadow 0.2s;">
+        <button id="btn-zoom-out" title="Reduzir Zoom (Ctrl + Scroll Para Baixo)" style="background: transparent; border: none; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--c-text); font-size: 1.2rem; border-radius: 4px; transition: background 0.2s;">-</button>
+        <span id="zoom-level" title="Duplo clique para restaurar" style="font-size: 0.85rem; padding: 4px 2px; font-weight: 600; color: var(--c-primary); min-width: 45px; text-align: center; cursor: pointer; user-select: none;">100%</span>
+        <button id="btn-zoom-in" title="Aumentar Zoom (Ctrl + Scroll Para Cima)" style="background: transparent; border: none; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--c-text); font-size: 1.1rem; border-radius: 4px; transition: background 0.2s;">+</button>
+      </div>
+      
       <style>
         .prop-btn {
           background: transparent; border: 1px solid transparent; border-radius: 4px;
@@ -417,6 +424,74 @@
     // Initialize with Alura selected on load (after drag.js builds the canvas)
     document.addEventListener('DOMContentLoaded', function() {
       certPickModel('alura');
+    });
+  </script>
+  <script>
+    // Global Zoom Logic for Previews
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentZoom = 1.0;
+      const zoomInBtn = document.getElementById('btn-zoom-in');
+      const zoomOutBtn = document.getElementById('btn-zoom-out');
+      const zoomLevelEl = document.getElementById('zoom-level');
+      const previewContainer = document.getElementById('previews-container');
+
+      function applyZoom() {
+        // Formata o texto
+        zoomLevelEl.textContent = Math.round(currentZoom * 100) + '%';
+        
+        // Pega todos os wrappers ativos
+        const activePreview = document.querySelector('.tool-preview.active');
+        if (activePreview) {
+          const wrapper = activePreview.querySelector('.a4-wrapper, .generated-preview-wrapper, #cert-canvas');
+          if (wrapper) {
+            wrapper.style.transform = `scale(${currentZoom})`;
+            wrapper.style.transformOrigin = 'top center';
+            wrapper.style.transition = 'transform 0.15s ease-out';
+          }
+        }
+      }
+
+      function zoomIn() { if (currentZoom < 3.0) { currentZoom += 0.1; applyZoom(); } }
+      function zoomOut() { if (currentZoom > 0.3) { currentZoom -= 0.1; applyZoom(); } }
+      function resetZoom() { currentZoom = 1.0; applyZoom(); }
+
+      zoomInBtn?.addEventListener('click', zoomIn);
+      zoomOutBtn?.addEventListener('click', zoomOut);
+      zoomLevelEl?.addEventListener('dblclick', resetZoom);
+
+      // Efeito de hover nos botões
+      [zoomInBtn, zoomOutBtn].forEach(btn => {
+        if(btn) {
+          btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(0,0,0,0.05)');
+          btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
+        }
+      });
+
+      // Atalho de Mouse Wheel (Ctrl + Scroll)
+      previewContainer?.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          if (e.deltaY < 0) zoomIn();
+          else zoomOut();
+        }
+      }, { passive: false });
+
+      // Ao trocar de aba (botões do menu), re-aplicamos o zoom na nova aba ativa
+      const navBtnsZ = document.querySelectorAll('.nav-btn');
+      navBtnsZ.forEach(btn => {
+        btn.addEventListener('click', () => {
+          setTimeout(applyZoom, 50); // delay para dar tempo do display:flex ativar
+        });
+      });
+      
+      // Hook the certPickModel just in case
+      const originalCertPickModel = window.certPickModel;
+      if (typeof originalCertPickModel === 'function') {
+        window.certPickModel = function(modelo) {
+          originalCertPickModel(modelo);
+          setTimeout(applyZoom, 50);
+        };
+      }
     });
   </script>
 </body>

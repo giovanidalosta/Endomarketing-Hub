@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from flask import Flask, render_template, request, send_file, jsonify, send_from_directory, redirect
+from flask import Flask, render_template, request, send_file, jsonify
 import os
 import json
 from io import BytesIO
@@ -9,11 +9,10 @@ import zipfile
 import base64
 
 app = Flask(__name__)
-app.secret_key = "secreto_ikatec"
 ASSETS_DIR = os.path.join(app.root_path, "assets")
 FONTS_DIR = os.path.join(ASSETS_DIR, "fontes")
 
-def load_font(filename, size, bold=False):
+def load_font(filename, size):
     try:
         return ImageFont.truetype(os.path.join(FONTS_DIR, filename), size)
     except IOError:
@@ -38,17 +37,6 @@ def quebra_texto_bbox(draw, font, text, max_width):
         lines.append(" ".join(current_line))
     return lines
 
-def load_certificado_config():
-    path = os.path.join(app.root_path, "certificado_config.json")
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_certificado_config(data):
-    path = os.path.join(app.root_path, "certificado_config.json")
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
 
 def quebrar_texto(draw, texto, largura_max, fonte):
     if not texto: return []
@@ -397,9 +385,9 @@ def api_cardapio_json():
         img = Image.open(base_path).convert('RGB')
         draw = ImageDraw.Draw(img)
         
-        fonte_periodo = load_font('Exo-Bold.ttf', 46, bold=True)
-        fonte_prato = load_font('calibri.ttf', 20, bold=False)
-        fonte_evento = load_font('Exo-Bold.ttf', 24, bold=True)
+        fonte_periodo = load_font('Exo-Bold.ttf', 46)
+        fonte_prato = load_font('calibri.ttf', 20)
+        fonte_evento = load_font('Exo-Bold.ttf', 24)
         
         draw.text((1150, 90), data.get('periodo', ''), fill='#13A8C8', font=fonte_periodo)
         
@@ -491,9 +479,9 @@ def gerar_ikanews_img(colaboradores):
     else:
         label_size, name_size, cargo_size = 24, 26, 26
 
-    fonte_label = load_font('Disket-Mono-Bold.ttf', label_size, bold=True)
-    fonte_nome = load_font('Disket-Mono-Bold.ttf', name_size, bold=True)
-    fonte_cargo = load_font('Disket-Mono-Bold.ttf', cargo_size, bold=True)
+    fonte_label = load_font('Disket-Mono-Bold.ttf', label_size)
+    fonte_nome = load_font('Disket-Mono-Bold.ttf', name_size)
+    fonte_cargo = load_font('Disket-Mono-Bold.ttf', cargo_size)
 
     largura_total = base.width
     if quantidade == 1:
@@ -569,37 +557,6 @@ def api_ikanews():
 # ---------------------------------------------------------
 # GERADOR DE CERTIFICADO
 # ---------------------------------------------------------
-
-def gerar_certificado_img(nome, curso, carga, data):
-    base_path = os.path.join(ASSETS_DIR, "certificado_base.png")
-    img = Image.open(base_path)
-    draw = ImageDraw.Draw(img)
-
-    fonte_nome = load_font("Exo-Regular.ttf", 105)
-    fonte_curso = load_font("Exo-Regular.ttf", 42)
-    fonte_info = load_font("Exo-Regular.ttf", 50)
-
-    # Nome
-    Y_NOME = 270
-    AJUSTE_X_NOME = 60
-    bbox = draw.textbbox((0, 0), nome, font=fonte_nome)
-    largura_texto = bbox[2] - bbox[0]
-    x_nome = ((img.width - largura_texto) / 2) + AJUSTE_X_NOME
-    draw.text((x_nome, Y_NOME), nome, fill="white", font=fonte_nome)
-
-    # Curso
-    linhas_curso = quebra_texto_bbox(draw, fonte_curso, curso, 1000)
-    for i, linha in enumerate(linhas_curso):
-        draw.text((480, 470 + (i * 50)), linha, fill="white", font=fonte_curso)
-
-    # Carga e Data
-    draw.text((480, 650), carga, fill="white", font=fonte_info)
-    draw.text((930, 650), data, fill="white", font=fonte_info)
-
-    output = BytesIO()
-    img.save(output, format='PNG')
-    output.seek(0)
-    return output, f"Certificado_{nome}.png"
 
 
 @app.route('/')
