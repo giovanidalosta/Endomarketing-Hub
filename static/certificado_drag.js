@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    loadConfigForModel();
+    // (Initialization moved to bottom to avoid TDZ)
 
     function addResizeHandles(el) {
         el.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
@@ -297,17 +297,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const modeInput = document.querySelector('input[name="cert_mode"]:checked');
         let mode = modeInput ? modeInput.value : 'unico';
         
-        const lblLote = document.getElementById('lbl-mode-lote');
         const radioUnico = document.getElementById('radio-mode-unico');
         
         if (modelo === 'alura') {
-            if (lblLote) lblLote.style.display = 'none';
             if (mode === 'lote' && radioUnico) {
                 radioUnico.checked = true;
                 mode = 'unico';
             }
-        } else {
-            if (lblLote) lblLote.style.display = 'flex';
         }
         
         const btnAddField = document.getElementById('btn-add-field');
@@ -340,6 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (cargaHintAlura) cargaHintAlura.style.display = 'none';
 
             radioLote.disabled = true;
+            lblModeLote.style.display = 'none';
             lblModeLote.style.color = 'var(--c-fg-muted)';
             if (mode === 'lote') document.querySelector('input[value="unico"]').checked = true;
         } else if (modelo === 'ikated') {
@@ -379,6 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!inputs['apresentador'].value) updateTextHtml(texts['apresentador'], texts['apresentador'].getAttribute('data-placeholder'));
 
             radioLote.disabled = false;
+            lblModeLote.style.display = 'flex';
             lblModeLote.style.color = 'var(--c-fg)';
         } else if (modelo === 'generico') {
             grpCurso.style.display = 'none';
@@ -393,6 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
             texts['apresentador'].style.display = 'none';
 
             radioLote.disabled = false;
+            lblModeLote.style.display = 'flex';
             lblModeLote.style.color = 'var(--c-fg)';
         }
         
@@ -459,16 +458,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (selModelo) {
-        let lastModelo = selModelo.value;
         selModelo.addEventListener('change', () => {
-            if (selModelo.value !== lastModelo) {
-                lastModelo = selModelo.value;
-                loadConfigForModel();
-            }
+            loadConfigForModel();
             updateFormState();
         });
     }
     radiosMode.forEach(r => r.addEventListener('change', updateFormState));
+
+    // Initialize state and expose globals AFTER all consts are declared
+    loadConfigForModel();
+    updateFormState();
+    window.updateFormState = updateFormState;
+    window.certResizeCanvas = resizeCanvas;
+    window.certLoadConfig = loadConfigForModel;
     
     let extraFieldsCount = 0;
     const btnAddField = document.getElementById('btn-add-field');

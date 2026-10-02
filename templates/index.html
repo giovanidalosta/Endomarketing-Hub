@@ -109,27 +109,34 @@
 
       <!-- CERTIFICADO FORM -->
       <form id="form-certificado" class="tool-form" method="post" action="/api/certificados-lote">
-        <div class="panel__title">Dados do Certificado</div>
-        
-        <div class="field">
-          <label for="cert-modelo">Modelo do Certificado</label>
-          <select id="cert-modelo" name="modelo" class="select-css">
-            <option value="alura">Alura</option>
-            <option value="ikated">IKATED</option>
-          </select>
+        <div class="panel__title">Certificados</div>
+
+        <!-- MODEL TAB BAR -->
+        <div style="display: flex; gap: 0; margin-bottom: 1.25rem; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--c-border);">
+          <button type="button" id="tab-alura" onclick="certPickModel('alura')"
+            style="flex: 1; padding: 0.6rem 1rem; font-size: 0.9rem; border: none; cursor: pointer; font-family: inherit; font-weight: 600; transition: background 0.15s, color 0.15s; background: var(--c-primary); color: white;">
+            🎓 Alura
+          </button>
+          <button type="button" id="tab-ikated" onclick="certPickModel('ikated')"
+            style="flex: 1; padding: 0.6rem 1rem; font-size: 0.9rem; border: none; cursor: pointer; font-family: inherit; font-weight: 600; transition: background 0.15s, color 0.15s; background: transparent; color: var(--c-muted);">
+            ⚡ IKATED
+          </button>
         </div>
 
-        <div class="field" style="margin-top: 0.5rem; margin-bottom: 1rem;">
-          <label>Modo de Geração</label>
-          <div style="display: flex; gap: 2rem; align-items: center; margin-top: 0.5rem;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin: 0; cursor: pointer;">
-              <input type="radio" name="cert_mode" value="unico" id="radio-mode-unico" checked> Único
-            </label>
-            <label id="lbl-mode-lote" style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin: 0; cursor: pointer; white-space: nowrap;">
-              <input type="radio" name="cert_mode" value="lote" id="radio-mode-lote"> Em Lote
-            </label>
+        <input type="hidden" id="cert-modelo" name="modelo" value="alura">
+
+        <div id="cert-form-body">
+          <div class="field" style="margin-top: 0; margin-bottom: 1rem;">
+            <label>Modo de Geração</label>
+            <div style="display: flex; gap: 2rem; align-items: center; margin-top: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin: 0; cursor: pointer;">
+                <input type="radio" name="cert_mode" value="unico" id="radio-mode-unico" checked> Único
+              </label>
+              <label id="lbl-mode-lote" style="display: none; align-items: center; gap: 0.5rem; font-weight: normal; margin: 0; cursor: pointer; white-space: nowrap;">
+                <input type="radio" name="cert_mode" value="lote" id="radio-mode-lote"> Em Lote
+              </label>
+            </div>
           </div>
-        </div>
 
         <div class="field" id="group-nome">
           <label id="label-nome">Nome do Aluno</label>
@@ -178,6 +185,8 @@
           </div>
           <input type="file" id="upload-bg-certificado" accept="image/*" style="display:none;" />
         </div>
+
+        </div> <!-- end cert-form-body -->
 
       </form>
 
@@ -358,6 +367,57 @@
 
   <script src="{{ url_for('static', filename='script_clean.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='script.js') }}?v=2"></script>
-  <script src="{{ url_for('static', filename='certificado_drag.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='certificado_drag.js') }}?v=22"></script>
+  <script>
+    function certPickModel(modelo) {
+      // Update hidden input
+      const selModelo = document.getElementById('cert-modelo');
+      selModelo.value = modelo;
+
+      // Update tab active styles
+      const tabAlura = document.getElementById('tab-alura');
+      const tabIkated = document.getElementById('tab-ikated');
+      if (modelo === 'alura') {
+        tabAlura.style.background = 'var(--c-primary)';
+        tabAlura.style.color = 'white';
+        tabIkated.style.background = 'transparent';
+        tabIkated.style.color = 'var(--c-muted)';
+      } else {
+        tabIkated.style.background = 'var(--c-primary)';
+        tabIkated.style.color = 'white';
+        tabAlura.style.background = 'transparent';
+        tabAlura.style.color = 'var(--c-muted)';
+      }
+
+      // Show/hide Em Lote
+      const lblLote = document.getElementById('lbl-mode-lote');
+      if (modelo === 'alura') {
+        if (lblLote) lblLote.style.display = 'none';
+        const radioUnico = document.getElementById('radio-mode-unico');
+        if (radioUnico) radioUnico.checked = true;
+      } else {
+        if (lblLote) lblLote.style.display = 'flex';
+      }
+
+      // Directly switch the canvas background image
+      const canvasEl = document.getElementById('cert-canvas');
+      if (canvasEl) {
+        canvasEl.style.backgroundImage = `url('/static/certificado_base_${modelo}.png?v=${Date.now()}')`;
+      }
+
+      // Also notify drag.js if available (for positions/config)
+      if (typeof window.certLoadConfig === 'function') window.certLoadConfig();
+      if (typeof window.updateFormState === 'function') window.updateFormState();
+
+      // Recalculate canvas size
+      setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
+      setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 400);
+    }
+
+    // Initialize with Alura selected on load (after drag.js builds the canvas)
+    document.addEventListener('DOMContentLoaded', function() {
+      certPickModel('alura');
+    });
+  </script>
 </body>
 </html>
