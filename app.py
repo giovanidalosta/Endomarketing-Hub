@@ -65,10 +65,13 @@ def quebrar_texto(draw, texto, largura_max, fonte):
             
     return linhas_finais
 
-def escrever_multilinha(draw, x, y, texto, largura_max, fonte):
+def escrever_multilinha(draw, x, y, texto, largura_max, fonte, line_height_mult=1.15):
     linhas = quebrar_texto(draw, texto, largura_max, fonte)
+    bbox = draw.textbbox((0, 0), "A", font=fonte)
+    altura = bbox[3] - bbox[1]
+    step = altura * line_height_mult
     for i, linha in enumerate(linhas):
-        draw.text((x, y + (i * 50)), linha, fill="white", font=fonte)
+        draw.text((x, y + (i * step)), linha, fill="white", font=fonte)
 
 @app.route('/api/certificado-config', methods=['GET', 'POST'])
 def api_certificado_config():

@@ -106,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (conf.textDecoration) newText.style.textDecoration = conf.textDecoration;
             if (conf.textAlign) newText.style.textAlign = conf.textAlign;
             if (conf.maxWidth) newText.style.maxWidth = conf.maxWidth;
+            if (conf.lineHeight) newText.style.lineHeight = conf.lineHeight;
             if (conf.showLabel) newText.dataset.showLabel = conf.showLabel;
         } else {
             newText.style.top = '400px';
@@ -155,6 +156,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (conf.textAlign) el.style.textAlign = conf.textAlign;
                         if (conf.maxWidth) el.style.maxWidth = conf.maxWidth;
                         else el.style.maxWidth = 'none';
+                        if (conf.lineHeight) el.style.lineHeight = conf.lineHeight;
+                        else el.style.lineHeight = 'normal';
                         if (conf.showLabel) el.dataset.showLabel = conf.showLabel;
                         
                         // Re-render HTML with new properties
@@ -553,6 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 transform: el.style.transform || '',
                 color: el.style.color || '',
                 fontSize: el.style.fontSize || '',
+                lineHeight: el.style.lineHeight || '',
                 showLabel: el.dataset.showLabel || '',
                 labelColor: el.dataset.labelColor || '',
                 moved: el.dataset.moved || ''
@@ -576,6 +580,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         el.style.transform = saved.transform;
                         el.style.color = saved.color;
                         el.style.fontSize = saved.fontSize;
+                        el.style.lineHeight = saved.lineHeight || 'normal';
                         if (saved.showLabel) el.dataset.showLabel = saved.showLabel;
                         else delete el.dataset.showLabel;
                         if (saved.labelColor) el.dataset.labelColor = saved.labelColor;
@@ -696,6 +701,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
+
+        const inputLineHeight = document.getElementById('prop-line-height');
+        if (inputLineHeight) {
+            inputLineHeight.addEventListener('input', (e) => {
+                if (!activePropsEl) return;
+                const val = parseFloat(e.target.value);
+                if (val && !isNaN(val)) {
+                    activePropsEl.style.lineHeight = val;
+                } else {
+                    activePropsEl.style.lineHeight = 'normal';
+                }
+            });
+        }
     }
 
     document.addEventListener('mousedown', (e) => {
@@ -770,6 +788,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     inputMaxWidth.value = parseInt(maxWidth);
                 } else {
                     inputMaxWidth.value = '';
+                }
+            }
+
+            // Line Height
+            const inputLineHeight = document.getElementById('prop-line-height');
+            if (inputLineHeight) {
+                let lineHeight = window.getComputedStyle(el).lineHeight;
+                if (lineHeight && lineHeight !== 'normal') {
+                    // Try to convert px line-height to multiplier
+                    if (lineHeight.endsWith('px')) {
+                        let lhPx = parseFloat(lineHeight);
+                        let fsPx = parseFloat(window.getComputedStyle(el).fontSize);
+                        if (fsPx) inputLineHeight.value = (lhPx / fsPx).toFixed(2);
+                        else inputLineHeight.value = '';
+                    } else {
+                        inputLineHeight.value = parseFloat(lineHeight) || '';
+                    }
+                } else {
+                    inputLineHeight.value = '';
                 }
             }
         }
