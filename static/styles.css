@@ -1,28 +1,58 @@
-﻿/* ================================================================
+/* ================================================================
    Ikatec - Endomarketing Hub - Design System
    ================================================================ */
 :root {
+  /* Core Brand */
   --c-primary: #09A8C9;
   --c-light: #19CFF5;
+  --c-primary-hover: #078da8;
+  
+  /* Light Theme (Default) */
   --c-dark: #101720;
   --c-text: #2D3748;
   --c-bg: #F4F7FE;
-  --c-surface: #FFFFFF;
-  --c-border: #E2E8F0;
+  --c-surface: rgba(255, 255, 255, 0.65);
+  --c-border: rgba(226, 232, 240, 0.6);
   --c-muted: #718096;
+  --panel-blur: blur(16px);
+  --header-bg: rgba(16, 23, 32, 0.95);
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --bg-gradient: linear-gradient(135deg, #F4F7FE 0%, #e1e9f6 100%);
+  --preview-bg: rgba(235, 240, 246, 0.5);
+  
+  /* Activity Colors */
   --c-normal: #09A8C9;
   --c-free: #4E709B;
   --c-lunch: #12990d;
   --c-training: #2F435E;
   --c-meeting: #53DBF7;
+  
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, .04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, .08);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, .12);
   --font: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  --c-dark: #F4F7FE;
+  --c-text: #E2E8F0;
+  --c-bg: #0B111A;
+  --c-surface: rgba(20, 27, 40, 0.5);
+  --c-border: rgba(255, 255, 255, 0.1);
+  --c-muted: #94A3B8;
+  --header-bg: rgba(11, 17, 26, 0.85);
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+  --input-bg: rgba(30, 41, 59, 0.7);
+  --bg-gradient: linear-gradient(135deg, #090e15 0%, #151e2b 100%);
+  --preview-bg: rgba(15, 21, 31, 0.5);
+  --c-primary: #19CFF5;
+  --c-light: #53DBF7;
 }
 
 *,
@@ -36,13 +66,15 @@
 html { font-size: 13px; }
 body {
   font-family: var(--font);
-  background: var(--c-bg);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--c-text);
   min-height: 100vh;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   margin: 0;
   padding: 0;
+  transition: background var(--transition), color var(--transition);
 }
 
 /* App Header */
@@ -50,12 +82,15 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--c-dark);
+  background: var(--header-bg);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
   padding: 0 2rem;
   height: 64px;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  transition: background var(--transition);
 }
 
 .app-header__inner {
@@ -82,6 +117,69 @@ body {
   padding-bottom: 5px;
 }
 
+/* Theme Toggle Switch */
+.theme-switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-switch-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  user-select: none;
+}
+
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.theme-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: .4s;
+  border-radius: 34px;
+  border: 1.5px solid rgba(255,255,255,0.4);
+}
+
+.theme-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 2.5px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .theme-slider {
+  background-color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+input:checked + .theme-slider:before {
+  transform: translateX(24px);
+}
+
+
 /* 3-Column Layout */
 .layout {
   display: grid;
@@ -96,14 +194,17 @@ body {
 /* Base Panel Styles */
 .panel {
   background: var(--c-surface);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   padding: 1.5rem;
-  transition: box-shadow var(--transition);
+  transition: box-shadow var(--transition), transform var(--transition), background var(--transition), border-color var(--transition);
 }
 .panel:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 /* 1. Sidebar Nav */
@@ -211,7 +312,7 @@ input, select, textarea {
   font-family: var(--font);
   font-size: .95rem;
   color: var(--c-text);
-  background: var(--c-surface);
+  background: var(--input-bg);
   border: 1.5px solid var(--c-border);
   border-radius: var(--radius-sm);
   padding: .65rem .85rem;
@@ -222,6 +323,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   border-color: var(--c-primary);
   box-shadow: 0 0 0 4px rgba(9, 168, 201, .12);
+  background: var(--c-surface);
 }
 textarea {
   resize: vertical;
@@ -282,9 +384,9 @@ textarea {
 
 /* 3. Preview Panel */
 .panel--preview {
-  background: #EBF0F6; /* Softer background */
+  background: var(--preview-bg);
   border: 1px solid var(--c-border);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.04);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -364,12 +466,13 @@ textarea {
   border: 1.5px solid var(--c-border);
   border-radius: var(--radius-md);
   padding: 1rem;
-  background: var(--c-bg);
+  background: var(--input-bg);
   display: flex;
   flex-direction: column;
   gap: .5rem;
   position: relative;
-  animation: slideIn .2s ease
+  animation: slideIn .2s ease;
+  transition: all var(--transition);
 }
 
 .activity-card .card-header {
@@ -423,6 +526,16 @@ textarea {
 
 /* Agenda Document */
 .agenda-doc {
+  /* Force light mode variables inside the document so it prints correctly */
+  --c-dark: #101720;
+  --c-text: #2D3748;
+  --c-bg: #F4F7FE;
+  --c-surface: #FFFFFF;
+  --c-border: #E2E8F0;
+  --c-muted: #718096;
+  --c-primary: #09A8C9;
+  --c-light: #19CFF5;
+  
   width: 794px;
   min-height: 1123px;
   background: #fff;

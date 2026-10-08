@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
   <link rel="stylesheet" href="{{ url_for('static', filename='certificado_drag.css') }}?v=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -16,11 +16,18 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="app-header__inner">
+    <div class="app-header__inner" style="justify-content: space-between;">
       <span class="app-header__brand">
         <img src="{{ url_for('static', filename='logo_branca.png') }}" alt="Logo" class="header-logo" onerror="this.style.display='none'">
         <span class="header-title">Endomarketing Hub</span>
       </span>
+      <div class="theme-switch-wrapper">
+        <span id="theme-text" class="theme-switch-text">Modo Claro</span>
+        <label class="theme-switch" title="Alternar tema">
+          <input type="checkbox" id="theme-checkbox">
+          <span class="theme-slider"></span>
+        </label>
+      </div>
     </div>
   </header>
 
@@ -195,13 +202,8 @@
     <!-- COL 3: Painel de Pré-visualização -->
     <section class="panel panel--preview" id="previews-container">
       
-      <!-- Controle de Zoom Global -->
-      <div id="zoom-controls" style="position: fixed; bottom: 40px; right: 40px; display: flex; align-items: center; gap: 4px; background: var(--c-surface); border: 1px solid var(--c-border); padding: 4px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000; transition: box-shadow 0.2s;">
-        <button id="btn-zoom-out" title="Reduzir Zoom (Ctrl + Scroll Para Baixo)" style="background: transparent; border: none; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--c-text); font-size: 1.2rem; border-radius: 4px; transition: background 0.2s;">-</button>
-        <span id="zoom-level" title="Duplo clique para restaurar" style="font-size: 0.85rem; padding: 4px 2px; font-weight: 600; color: var(--c-primary); min-width: 45px; text-align: center; cursor: pointer; user-select: none;">100%</span>
-        <button id="btn-zoom-in" title="Aumentar Zoom (Ctrl + Scroll Para Cima)" style="background: transparent; border: none; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--c-text); font-size: 1.1rem; border-radius: 4px; transition: background 0.2s;">+</button>
-      </div>
-      
+      <!-- Controle de Zoom Global movido para o final do container -->
+
       <style>
         .prop-btn {
           background: transparent; border: 1px solid transparent; border-radius: 4px;
@@ -356,6 +358,12 @@
         </div>
       </div>
 
+      <!-- Controle de Zoom Global -->
+      <div id="zoom-controls" style="position: sticky; bottom: 20px; align-self: flex-end; margin-top: auto; display: flex; align-items: center; gap: 4px; background: var(--c-surface); border: 1px solid var(--c-border); padding: 4px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 1000; transition: box-shadow 0.2s;">
+        <button id="btn-zoom-out" title="Reduzir Zoom (Ctrl + Scroll Para Baixo)" style="background: transparent; border: none; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--c-text); font-size: 1.2rem; border-radius: 4px; transition: background 0.2s;">-</button>
+        <span id="zoom-level" title="Duplo clique para restaurar" style="font-size: 0.85rem; padding: 4px 2px; font-weight: 600; color: var(--c-primary); min-width: 45px; text-align: center; cursor: pointer; user-select: none;">100%</span>
+        <button id="btn-zoom-in" title="Aumentar Zoom (Ctrl + Scroll Para Cima)" style="background: transparent; border: none; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--c-text); font-size: 1.1rem; border-radius: 4px; transition: background 0.2s;">+</button>
+      </div>
     </section>
   </main>
 
@@ -492,6 +500,37 @@
           setTimeout(applyZoom, 50);
         };
       }
+    });
+
+    // Theme Toggle Logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeCheckbox = document.getElementById('theme-checkbox');
+      const themeText = document.getElementById('theme-text');
+      const htmlEl = document.documentElement;
+
+      // Check saved theme
+      const savedTheme = localStorage.getItem('hub-theme') || 'light';
+      if (savedTheme === 'dark') {
+        htmlEl.setAttribute('data-theme', 'dark');
+        themeCheckbox.checked = true;
+        themeText.textContent = 'Modo Escuro';
+      } else {
+        htmlEl.setAttribute('data-theme', 'light');
+        themeCheckbox.checked = false;
+        themeText.textContent = 'Modo Claro';
+      }
+
+      themeCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          htmlEl.setAttribute('data-theme', 'dark');
+          localStorage.setItem('hub-theme', 'dark');
+          themeText.textContent = 'Modo Escuro';
+        } else {
+          htmlEl.setAttribute('data-theme', 'light');
+          localStorage.setItem('hub-theme', 'light');
+          themeText.textContent = 'Modo Claro';
+        }
+      });
     });
   </script>
 </body>

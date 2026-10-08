@@ -571,7 +571,7 @@ def add_header(r):
     return r
 
 if __name__ == '__main__':
-    from waitress import serve
     port = int(os.environ.get('PORT', 5050))
-    print(f"Starting Waitress server on http://0.0.0.0:{port}")
-    serve(app, host='0.0.0.0', port=port)
+    print(f"Starting Flask development server on http://0.0.0.0:{port} with auto-reload")
+    # Using app.run with debug=True enables auto-reloading
+    app.run(host='0.0.0.0', port=port, debug=True)
