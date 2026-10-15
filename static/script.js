@@ -474,15 +474,21 @@ document.addEventListener("DOMContentLoaded", () => {
     function safeGet(r, c) {
       const cellAddr = XLSX.utils.encode_cell({ r, c });
       const cell = worksheet[cellAddr];
-      if (!cell || cell.v === undefined || cell.v === null) return '';
+      if (!cell) return '';
       if (cell.v instanceof Date) return cell.v;
-      return String(cell.w !== undefined ? cell.w : cell.v).trim();
+      if (cell.w !== undefined && cell.w !== null && String(cell.w).trim() !== '') {
+        return String(cell.w).trim();
+      }
+      if (cell.v !== undefined && cell.v !== null) {
+        return String(cell.v).trim();
+      }
+      return '';
     }
 
     function fmtDate(val) {
       if (val instanceof Date) {
-        const d = String(val.getDate()).padStart(2, '0');
-        const m = String(val.getMonth() + 1).padStart(2, '0');
+        const d = String(val.getUTCDate()).padStart(2, '0');
+        const m = String(val.getUTCMonth() + 1).padStart(2, '0');
         return `${d}/${m}`;
       }
       const s = String(val).trim();
