@@ -127,6 +127,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    const DEFAULT_CERT_CONFIGS = {
+        "ikated": {
+            "cert-nome-txt": { "top": "319.07px", "left": "149.626px", "transform": "", "color": "rgb(243, 245, 249)", "fontSize": "95px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "start", "maxWidth": "1384.77px", "showLabel": false, "labelColor": "" },
+            "cert-curso-txt": { "top": "512px", "left": "150px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "42px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "start", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-carga-txt": { "top": "940px", "left": "841.999px", "transform": "translateX(-50%)", "color": "rgb(243, 245, 249)", "fontSize": "36px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-data-txt": { "top": "800px", "left": "842px", "transform": "translateX(-50%)", "color": "rgb(243, 245, 249)", "fontSize": "36px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-tema-txt": { "top": "523.583px", "left": "842px", "transform": "translateX(-50%)", "color": "rgb(243, 245, 249)", "fontSize": "42px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "bold", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "1333.45px", "showLabel": false, "labelColor": "" },
+            "cert-apresentador-txt": { "top": "871.541px", "left": "842px", "transform": "translateX(-50%)", "color": "rgb(243, 245, 249)", "fontSize": "36px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "bold", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "959.226px", "showLabel": false, "labelColor": "" }
+        },
+        "alura": {
+            "cert-nome-txt": { "top": "224.129px", "left": "495.937px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "95px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "start", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-curso-txt": { "top": "476.871px", "left": "472.952px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "44px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "start", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-carga-txt": { "top": "650px", "left": "472.938px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "48px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-data-txt": { "top": "650.001px", "left": "930.131px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "48px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "400", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-tema-txt": { "top": "512px", "left": "350px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "44px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "bold", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "", "showLabel": false, "labelColor": "" },
+            "cert-apresentador-txt": { "top": "720px", "left": "350px", "transform": "", "color": "rgb(255, 255, 255)", "fontSize": "40px", "fontFamily": "Exo-Regular, sans-serif", "fontWeight": "bold", "fontStyle": "normal", "textDecoration": "none", "textAlign": "center", "maxWidth": "", "showLabel": false, "labelColor": "" }
+        }
+    };
+
+    window.getCertBgUrl = function(modelo) {
+        const customBg = localStorage.getItem(`cert_bg_${modelo}`);
+        if (customBg) return customBg;
+        return `static/certificado_base_${modelo}.png`;
+    };
+
+    function getCertConfigForModel(modelo) {
+        const saved = localStorage.getItem(`cert_config_${modelo}`);
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) {}
+        }
+        return DEFAULT_CERT_CONFIGS[modelo] || {};
+    }
+
     function loadConfigForModel() {
         const modelo = selModelo ? selModelo.value : 'alura';
         
@@ -135,46 +168,45 @@ document.addEventListener("DOMContentLoaded", () => {
         const dynFields = document.getElementById('dynamic-fields-container');
         if (dynFields) dynFields.innerHTML = '';
         
-        fetch(`/api/certificado-config?modelo=${modelo}`)
-            .then(res => res.json())
-            .then(config => {
-                defaultConfig = config;
-                Object.keys(texts).forEach(key => {
-                    const el = texts[key];
-                    if (!el) return;
-                    const conf = defaultConfig[el.id];
-                    if (conf) {
-                        el.style.top = conf.top;
-                        el.style.left = conf.left;
-                        el.style.transform = conf.transform || 'none';
-                        if (conf.color) el.style.color = conf.color;
-                        if (conf.fontSize) el.style.fontSize = conf.fontSize;
-                        if (conf.fontFamily) el.style.fontFamily = conf.fontFamily;
-                        if (conf.fontWeight) el.style.fontWeight = conf.fontWeight;
-                        if (conf.fontStyle) el.style.fontStyle = conf.fontStyle;
-                        if (conf.textDecoration) el.style.textDecoration = conf.textDecoration;
-                        if (conf.textAlign) el.style.textAlign = conf.textAlign;
-                        if (conf.maxWidth) el.style.maxWidth = conf.maxWidth;
-                        else el.style.maxWidth = 'none';
-                        if (conf.lineHeight) el.style.lineHeight = conf.lineHeight;
-                        else el.style.lineHeight = 'normal';
-                        if (conf.showLabel) el.dataset.showLabel = conf.showLabel;
-                        
-                        // Re-render HTML with new properties
-                        updateTextHtml(el);
-                    }
-                });
+        const config = getCertConfigForModel(modelo);
+        defaultConfig = config;
+        Object.keys(texts).forEach(key => {
+            const el = texts[key];
+            if (!el) return;
+            const conf = defaultConfig[el.id];
+            if (conf) {
+                el.style.top = conf.top;
+                el.style.left = conf.left;
+                el.style.transform = conf.transform || 'none';
+                if (conf.color) el.style.color = conf.color;
+                if (conf.fontSize) el.style.fontSize = conf.fontSize;
+                if (conf.fontFamily) el.style.fontFamily = conf.fontFamily;
+                if (conf.fontWeight) el.style.fontWeight = conf.fontWeight;
+                if (conf.fontStyle) el.style.fontStyle = conf.fontStyle;
+                if (conf.textDecoration) el.style.textDecoration = conf.textDecoration;
+                if (conf.textAlign) el.style.textAlign = conf.textAlign;
+                if (conf.maxWidth) el.style.maxWidth = conf.maxWidth;
+                else el.style.maxWidth = 'none';
+                if (conf.lineHeight) el.style.lineHeight = conf.lineHeight;
+                else el.style.lineHeight = 'normal';
+                if (conf.showLabel) el.dataset.showLabel = conf.showLabel;
                 
-                // Re-create custom fields
-                Object.keys(config).forEach(k => {
-                    if (k.startsWith('cert-extra_')) {
-                        const fieldId = k.replace('cert-', '').replace('-txt', '');
-                        const conf = config[k];
-                        createCustomField(fieldId, conf.label || 'Campo Extra', conf);
-                    }
-                });
-            });
+                // Re-render HTML with new properties
+                updateTextHtml(el);
+            }
+        });
+        
+        // Re-create custom fields
+        Object.keys(config).forEach(k => {
+            if (k.startsWith('cert-extra_')) {
+                const fieldId = k.replace('cert-', '').replace('-txt', '');
+                const conf = config[k];
+                createCustomField(fieldId, conf.label || 'Campo Extra', conf);
+            }
+        });
     }
+
+    window.certLoadConfig = loadConfigForModel;
 
     // (Initialization moved to bottom to avoid TDZ)
 
@@ -411,10 +443,8 @@ document.addEventListener("DOMContentLoaded", () => {
             texts['nome'].textContent = inputNomeUnico.value || texts['nome'].getAttribute('data-placeholder');
         }
 
-        const canvasEl = document.getElementById('cert-canvas');
-        if (canvasEl) {
-            canvasEl.style.backgroundImage = `url('/static/certificado_base_${modelo}.png?v=${Date.now()}')`;
-        }
+            const bgUrl = window.getCertBgUrl ? window.getCertBgUrl(modelo) : `static/certificado_base_${modelo}.png`;
+            canvasEl.style.backgroundImage = `url('${bgUrl}')`;
         
         applyEditMode();
     }
@@ -1069,15 +1099,14 @@ setupExportButtons();
             });
             saveDefaultBtn.textContent = 'Salvando...';
             const modelo = selModelo ? selModelo.value : 'alura';
-            fetch(`/api/certificado-config?modelo=${modelo}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(newConfig)
-            }).then(() => {
-                defaultConfig = newConfig;
-                saveDefaultBtn.textContent = 'Padrão Salvo!';
-                setTimeout(() => saveDefaultBtn.textContent = 'Salvar como Padrão', 2000);
-            });
+            try {
+                localStorage.setItem(`cert_config_${modelo}`, JSON.stringify(newConfig));
+            } catch (err) {
+                console.warn('Erro ao salvar no localStorage:', err);
+            }
+            defaultConfig = newConfig;
+            saveDefaultBtn.textContent = 'Padrão Salvo!';
+            setTimeout(() => saveDefaultBtn.textContent = 'Salvar como Padrão', 2000);
         };
     }
     const btnUploadBg = document.getElementById('btn-upload-bg');
@@ -1089,31 +1118,28 @@ setupExportButtons();
             const file = e.target.files[0];
             if (!file) return;
             
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            btnUploadBg.textContent = 'Enviando...';
+            btnUploadBg.textContent = 'Carregando...';
             const modelo = selModelo ? selModelo.value : 'alura';
-            fetch(`/api/upload-certificado-bg?modelo=${modelo}`, {
-                method: 'POST',
-                body: formData
-            }).then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const canvasEl = document.getElementById('cert-canvas');
-                    if (canvasEl) {
-                        canvasEl.style.backgroundImage = `url('/static/certificado_base_${modelo}.png?v=${Date.now()}')`;
-                    }
-                    btnUploadBg.textContent = 'Fundo Atualizado!';
-                    setTimeout(() => btnUploadBg.textContent = 'Trocar Fundo', 2000);
-                } else {
-                    alert(data.error || 'Erro ao fazer upload');
-                    btnUploadBg.textContent = 'Trocar Fundo';
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                try {
+                    localStorage.setItem(`cert_bg_${modelo}`, dataUrl);
+                } catch (err) {
+                    console.warn('Imagem muito grande para persistir no localStorage, mantida apenas para esta sessão.');
                 }
-            }).catch(() => {
-                alert('Erro de conexão');
+                const canvasEl = document.getElementById('cert-canvas');
+                if (canvasEl) {
+                    canvasEl.style.backgroundImage = `url('${dataUrl}')`;
+                }
+                btnUploadBg.textContent = 'Fundo Atualizado!';
+                setTimeout(() => btnUploadBg.textContent = 'Trocar Fundo', 2000);
+            };
+            reader.onerror = () => {
+                alert('Erro ao carregar a imagem selecionada.');
                 btnUploadBg.textContent = 'Trocar Fundo';
-            });
+            };
+            reader.readAsDataURL(file);
         };
     }
 });

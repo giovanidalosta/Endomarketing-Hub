@@ -1,6 +1,21 @@
 @font-face {
     font-family: 'Exo-Regular';
-    src: url('Exo-Regular.ttf') format('truetype');
+    src: url('fontes/Exo-Regular.ttf') format('truetype'), url('Exo-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Exo-Bold';
+    src: url('fontes/Exo-Bold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Disket-Mono-Bold';
+    src: url('fontes/Disket-Mono-Bold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'calibri';
+    src: url('fontes/calibri.ttf') format('truetype');
 }
 
 .cert-workspace {
