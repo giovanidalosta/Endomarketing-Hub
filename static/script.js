@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentBlobData = {};
 
   /* ==========================================
-     HELPER - Carregar Imagem como Promise
+     HELPER - Carregar Imagem e Fontes como Promise
      ========================================== */
   function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -14,6 +14,41 @@ document.addEventListener("DOMContentLoaded", () => {
       img.src = src;
     });
   }
+
+  const fontCache = {};
+  async function loadFontFace(family, url, descriptors = {}) {
+    const key = `${family}_${descriptors.weight || 'normal'}`;
+    if (fontCache[key]) return fontCache[key];
+    try {
+      const font = new FontFace(family, `url(${url})`, descriptors);
+      const loaded = await font.load();
+      document.fonts.add(loaded);
+      fontCache[key] = loaded;
+      return loaded;
+    } catch (err) {
+      console.warn(`Aviso ao carregar fonte ${family}:`, err);
+    }
+  }
+
+  let fontsLoadingPromise = null;
+  function loadAllHubFonts() {
+    if (!fontsLoadingPromise) {
+      fontsLoadingPromise = Promise.all([
+        loadFontFace('Exo', 'static/fontes/Exo-Bold.ttf', { weight: 'bold' }),
+        loadFontFace('Exo-Bold', 'static/fontes/Exo-Bold.ttf', { weight: 'normal' }),
+        loadFontFace('Exo-Bold', 'static/fontes/Exo-Bold.ttf', { weight: 'bold' }),
+        loadFontFace('Exo-Regular', 'static/fontes/Exo-Regular.ttf', { weight: 'normal' }),
+        loadFontFace('Calibri', 'static/fontes/calibri.ttf', { weight: 'normal' }),
+        loadFontFace('calibri', 'static/fontes/calibri.ttf', { weight: 'normal' }),
+        loadFontFace('Disket-Mono-Bold', 'static/fontes/Disket-Mono-Bold.ttf', { weight: 'bold' }),
+        loadFontFace('Disket-Mono-Bold', 'static/fontes/Disket-Mono-Bold.ttf', { weight: 'normal' })
+      ]).then(() => document.fonts.ready);
+    }
+    return fontsLoadingPromise;
+  }
+
+  // Preload fonts immediately
+  loadAllHubFonts();
 
   /* ==========================================
      NAVEGAÇÃO DAS ABAS — gerenciada por script_clean.js
@@ -248,6 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function drawIkanewsCanvas(colaboradores) {
+    await loadAllHubFonts();
     const canvas = document.createElement('canvas');
     canvas.width = 1920;
     canvas.height = 1080;
@@ -494,6 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function drawCardapioCanvas(data) {
+    await loadAllHubFonts();
     const canvas = document.createElement('canvas');
     canvas.width = 1536;
     canvas.height = 864;
@@ -506,7 +543,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.textBaseline = 'top';
 
     // 1. Periodo
-    ctx.font = 'bold 46px "Exo-Bold", "Exo-Regular", sans-serif';
+    ctx.font = 'bold 46px "Exo", "Exo-Bold", sans-serif';
     ctx.fillStyle = '#13A8C8';
     ctx.fillText(data.periodo || '', 1150, 90);
 
@@ -538,7 +575,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function escreverEvento(x, y, texto) {
-      const font = 'bold 24px "Exo-Bold", "Exo-Regular", sans-serif';
+      const font = 'bold 24px "Exo", "Exo-Bold", sans-serif';
       ctx.font = font;
       ctx.fillStyle = '#041621';
       const lines = wrapText(texto, 250, font);
@@ -548,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function escreverPrato(x, y, texto) {
-      const font = '20px "calibri", Calibri, Arial, sans-serif';
+      const font = '20px "Calibri", "calibri", sans-serif';
       ctx.font = font;
       ctx.fillStyle = '#041621';
       const lines = wrapText(texto, 250, font);
