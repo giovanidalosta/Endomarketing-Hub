@@ -455,13 +455,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ==========================================
      LÓGICA - CARDÁPIO (SheetJS + Canvas)
+     Estrutura moderna com Abas por Dia (Seg-Sex)
+     Modelo Oficial de Fundo: static/cardapio_base.jpg (1536x864)
      ========================================== */
   const cardapioFile = document.getElementById('cardapio-file');
-  const cardapioEditor = document.getElementById('cardapio-editor');
+  const cardapioDropzone = document.getElementById('cardapio-dropzone');
+  const cardapioStatusMsg = document.getElementById('cardapio-status-msg');
+  const cardapioRestoreBtn = document.getElementById('cardapio-restore-sample-btn');
   const cardapioPeriodo = document.getElementById('cardapio-periodo');
+  const cardapioDaysTabs = document.getElementById('cardapio-days-tabs');
   const cardapioDiasContainer = document.getElementById('cardapio-dias-container');
+  const copyCardapioBtn = document.getElementById('copy-cardapio');
 
-  let cardapioData = null;
+  // Dados Padrão Iniciais (Modelo Corporativo Oficial)
+  const DEFAULT_CARDAPIO_DATA = {
+    periodo: "19/10 a 23/10",
+    dias: [
+      {
+        dia: "segunda",
+        evento: "Sabor da Casa",
+        pratos: ["Strogonoff de Carne", "Bisteca Suína Grelhada", "Batata Palha", "Strogonoff de Grão de Bico"]
+      },
+      {
+        dia: "terca",
+        evento: "Sabor da Casa",
+        pratos: ["Peixe Frito no Fubá", "Carne de Panela com Cenoura", "Cuscuz Nordestino", "Peixe Assado com Ervas"]
+      },
+      {
+        dia: "quarta",
+        evento: "Sabor da Casa",
+        pratos: ["Iscas Suínas ao Vinagrete", "Frango à Milanesa", "Espaguete ao Sugo", "Macarrão Integral com Legumes"]
+      },
+      {
+        dia: "quinta",
+        evento: "Sabor da Casa",
+        pratos: ["Frango Grelhado", "Lasanha Bolonhesa", "Cenoura Sauté", "Lasanha de Berinjela"]
+      },
+      {
+        dia: "sexta",
+        evento: "Sabor da Casa",
+        pratos: ["Panqueca de Carne ao Sugo", "Filé de Coxa Assado", "Repolho Refogado", "Omelete de Forno"]
+      }
+    ],
+    differe: "Sobremesa Especial: Mousse de Maracujá"
+  };
+
+  let cardapioData = JSON.parse(JSON.stringify(DEFAULT_CARDAPIO_DATA));
 
   function parseCardapioExcel(arrayBuffer) {
     if (typeof XLSX === 'undefined') {
@@ -474,15 +513,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function safeGet(r, c) {
       const cellAddr = XLSX.utils.encode_cell({ r, c });
       const cell = worksheet[cellAddr];
-      if (!cell) return '';
+      if (!cell || cell.v === undefined || cell.v === null) return '';
       if (cell.v instanceof Date) return cell.v;
       if (cell.w !== undefined && cell.w !== null && String(cell.w).trim() !== '') {
         return String(cell.w).trim();
       }
-      if (cell.v !== undefined && cell.v !== null) {
-        return String(cell.v).trim();
-      }
-      return '';
+      return String(cell.v).trim();
     }
 
     function fmtDate(val) {
@@ -497,7 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return s || "01/01";
     }
 
-    let periodo = "01/01 a 05/01";
+    let periodo = "19/10 a 23/10";
     try {
       const rawInicio = safeGet(1, 1);
       const rawFim = safeGet(1, 5);
@@ -508,12 +544,21 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("Erro ao calcular período:", e);
     }
 
+    function isDiaDaSemana(val) {
+      if (!val) return false;
+      const clean = String(val).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z]/g, '');
+      const diasValidos = ['segunda', 'segundafeira', 'seg', 'terca', 'tercafeira', 'ter', 'quarta', 'quartafeira', 'qua', 'quinta', 'quintafeira', 'qui', 'sexta', 'sextafeira', 'sex'];
+      return diasValidos.includes(clean);
+    }
+
     function textoEvento(t) {
-      const s = String(t || '').trim().toLowerCase();
-      if (['segunda', 'terça', 'terca', 'quarta', 'quinta', 'sexta'].includes(s)) {
+      const s = String(t || '').trim();
+      if (!s || isDiaDaSemana(s)) {
         return 'Sabor da Casa';
       }
-      return String(t || '').trim();
+      return s;
     }
 
     const dias = ["segunda", "terca", "quarta", "quinta", "sexta"];
@@ -542,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.height = 864;
     const ctx = canvas.getContext('2d');
 
-    // Background
+    // Background oficial (modelo existente do hub)
     const baseImg = await loadImage('static/cardapio_base.jpg');
     ctx.drawImage(baseImg, 0, 0, 1536, 864);
 
@@ -620,70 +665,163 @@ document.addEventListener("DOMContentLoaded", () => {
     return canvas;
   }
 
-  if (cardapioFile) {
-    cardapioEditor.style.display = 'none';
-    
-    cardapioFile.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+  function renderCardapioDayForms() {
+    if (!cardapioDiasContainer || !cardapioData) return;
 
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        cardapioData = parseCardapioExcel(arrayBuffer);
-        
-        cardapioPeriodo.value = cardapioData.periodo || '';
-        
-        let html = '';
-        const diaNomes = {'segunda': 'Segunda-feira', 'terca': 'Terça-feira', 'quarta': 'Quarta-feira', 'quinta': 'Quinta-feira', 'sexta': 'Sexta-feira'};
-        
-        cardapioData.dias.forEach((dia, i) => {
-          html += `
-            <div class="colab-box">
-              <h4>${diaNomes[dia.dia] || dia.dia}</h4>
-              <div class="field">
-                <label>Evento / Título</label>
-                <input type="text" class="cardapio-evento" data-index="${i}" value="${dia.evento}" />
-              </div>
-              <div class="field">
-                <label>De casa 1</label>
-                <input type="text" class="cardapio-prato" data-index="${i}" data-p="0" value="${dia.pratos[0] || ''}" />
-              </div>
-              <div class="field">
-                <label>De casa 2</label>
-                <input type="text" class="cardapio-prato" data-index="${i}" data-p="1" value="${dia.pratos[1] || ''}" />
-              </div>
-              <div class="field">
-                <label>Acompanhamento</label>
-                <input type="text" class="cardapio-prato" data-index="${i}" data-p="2" value="${dia.pratos[2] || ''}" />
-              </div>
-              <div class="field">
-                <label>Levíssimo</label>
-                <input type="text" class="cardapio-prato" data-index="${i}" data-p="3" value="${dia.pratos[3] || ''}" />
-              </div>
-              ${dia.dia === 'sexta' ? `
-              <div class="divider"></div>
-              <div class="field">
-                <label>Differe</label>
-                <textarea id="cardapio-differe" rows="3">${cardapioData.differe || ''}</textarea>
-              </div>` : ''}
-            </div>
-          `;
-        });
-        
-        cardapioDiasContainer.innerHTML = html;
-        cardapioEditor.style.display = 'flex';
-        
-        cardapioEditor.querySelectorAll('input, textarea').forEach(el => {
-          el.addEventListener('input', () => debounceUpdate('cardapio'));
-          el.addEventListener('change', () => debounceUpdate('cardapio'));
-        });
-        
-        debounceUpdate('cardapio');
+    // Preserva aba selecionada atualmente
+    const currentActiveBtn = cardapioDaysTabs ? cardapioDaysTabs.querySelector('.day-tab-btn.active') : null;
+    const activeIndex = currentActiveBtn ? parseInt(currentActiveBtn.dataset.dia, 10) : 0;
 
-      } catch (err) {
-        console.error(err);
-        alert('Não foi possível ler a planilha. Verifique o formato do arquivo.');
+    let html = '';
+    const diaNomes = {
+      'segunda': 'Segunda-feira',
+      'terca': 'Terça-feira',
+      'quarta': 'Quarta-feira',
+      'quinta': 'Quinta-feira',
+      'sexta': 'Sexta-feira'
+    };
+
+    cardapioData.dias.forEach((dia, i) => {
+      const isPaneActive = i === activeIndex;
+      html += `
+        <div class="day-form-pane ${isPaneActive ? 'active' : ''}" data-dia-index="${i}">
+          <div class="field">
+            <label style="font-weight: 700; color: var(--c-dark);">🏷️ Evento / Título</label>
+            <input type="text" class="cardapio-evento" data-index="${i}" value="${dia.evento || ''}" placeholder="Ex: Sabor da Casa" />
+          </div>
+
+          <div class="field">
+            <label style="font-weight: 700; color: #09A8C9;">⚡ De casa 1</label>
+            <input type="text" class="cardapio-prato" data-index="${i}" data-p="0" value="${dia.pratos[0] || ''}" placeholder="Ex: Strogonoff de Carne" />
+          </div>
+
+          <div class="field">
+            <label style="font-weight: 700; color: #0284C7;">🍽️ De casa 2</label>
+            <input type="text" class="cardapio-prato" data-index="${i}" data-p="1" value="${dia.pratos[1] || ''}" placeholder="Ex: Bisteca Suína ao Vinagrete" />
+          </div>
+
+          <div class="field">
+            <label style="font-weight: 700; color: #64748B;">🍚 Acompanhamento</label>
+            <input type="text" class="cardapio-prato" data-index="${i}" data-p="2" value="${dia.pratos[2] || ''}" placeholder="Ex: Batata Palha" />
+          </div>
+
+          <div class="field">
+            <label style="font-weight: 700; color: #10B981;">🌱 Levíssimo</label>
+            <input type="text" class="cardapio-prato" data-index="${i}" data-p="3" value="${dia.pratos[3] || ''}" placeholder="Ex: Strogonoff de Grão de Bico" />
+          </div>
+
+          ${dia.dia === 'sexta' ? `
+          <div class="divider"></div>
+          <div class="field">
+            <label style="font-weight: 700; color: #F59E0B;">🌟 Differe (Sexta-feira)</label>
+            <textarea id="cardapio-differe" rows="3" placeholder="Sobremesa ou diferencial da sexta...">${cardapioData.differe || ''}</textarea>
+          </div>` : ''}
+        </div>
+      `;
+    });
+
+    cardapioDiasContainer.innerHTML = html;
+
+    // Vincular inputs ao debounce para renderização em tempo real
+    cardapioDiasContainer.querySelectorAll('input, textarea').forEach(el => {
+      el.addEventListener('input', () => debounceUpdate('cardapio'));
+      el.addEventListener('change', () => debounceUpdate('cardapio'));
+    });
+  }
+
+  // Navegação entre abas Segunda a Sexta
+  if (cardapioDaysTabs) {
+    cardapioDaysTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.day-tab-btn');
+      if (!btn) return;
+      cardapioDaysTabs.querySelectorAll('.day-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const idx = parseInt(btn.dataset.dia, 10);
+      if (cardapioDiasContainer) {
+        cardapioDiasContainer.querySelectorAll('.day-form-pane').forEach((pane, pIdx) => {
+          pane.classList.toggle('active', pIdx === idx);
+        });
       }
+    });
+  }
+
+  async function handleCardapioFile(file) {
+    if (!file) return;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      cardapioData = parseCardapioExcel(arrayBuffer);
+      if (cardapioPeriodo) cardapioPeriodo.value = cardapioData.periodo || '';
+      if (cardapioStatusMsg) {
+        cardapioStatusMsg.textContent = `✓ Planilha carregada: ${file.name}`;
+        cardapioStatusMsg.style.color = 'var(--c-primary)';
+      }
+      renderCardapioDayForms();
+      debounceUpdate('cardapio');
+    } catch (err) {
+      console.error(err);
+      alert('Não foi possível ler a planilha. Verifique o formato do arquivo.');
+    }
+  }
+
+  if (cardapioFile) {
+    cardapioFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      handleCardapioFile(file);
+    });
+  }
+
+  if (cardapioDropzone) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      cardapioDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cardapioDropzone.classList.add('drag-active');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      cardapioDropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cardapioDropzone.classList.remove('drag-active');
+      });
+    });
+
+    cardapioDropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const file = dt && dt.files && dt.files[0];
+      if (file) handleCardapioFile(file);
+    });
+  }
+
+  if (cardapioRestoreBtn) {
+    cardapioRestoreBtn.addEventListener('click', () => {
+      cardapioData = JSON.parse(JSON.stringify(DEFAULT_CARDAPIO_DATA));
+      if (cardapioPeriodo) cardapioPeriodo.value = cardapioData.periodo || '';
+      if (cardapioStatusMsg) {
+        cardapioStatusMsg.textContent = '✓ Cardápio padrão restaurado';
+        cardapioStatusMsg.style.color = 'var(--c-primary)';
+      }
+      if (cardapioFile) cardapioFile.value = '';
+      renderCardapioDayForms();
+      debounceUpdate('cardapio');
+    });
+  }
+
+  if (cardapioPeriodo) {
+    cardapioPeriodo.value = cardapioData.periodo || '';
+    cardapioPeriodo.addEventListener('input', () => debounceUpdate('cardapio'));
+    cardapioPeriodo.addEventListener('change', () => debounceUpdate('cardapio'));
+  }
+
+  // Inicializa o formulário de abas imediatamente
+  renderCardapioDayForms();
+
+  // Aciona renderização quando clica no menu Cardápio Semanal
+  const navCardapioBtn = document.querySelector('.nav-btn[data-target="cardapio"]');
+  if (navCardapioBtn) {
+    navCardapioBtn.addEventListener('click', () => {
+      setTimeout(() => debounceUpdate('cardapio'), 50);
     });
   }
 
@@ -705,25 +843,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (toolName === 'cardapio') {
       if (!cardapioData) {
-        renderEl.innerHTML = `<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg><p>Faça upload de uma planilha .xlsx para visualizar o cardápio.</p></div>`;
+        renderEl.innerHTML = `<div class="empty-state"><p>Faça upload de uma planilha .xlsx para visualizar o cardápio.</p></div>`;
         renderEl.style.display = "block";
         if (exportBtn) exportBtn.disabled = true;
         return;
       }
 
-      cardapioData.periodo = cardapioPeriodo.value;
+      if (cardapioPeriodo) {
+        cardapioData.periodo = cardapioPeriodo.value;
+      }
       const differeEl = document.getElementById('cardapio-differe');
-      cardapioData.differe = differeEl ? differeEl.value : '';
+      if (differeEl) {
+        cardapioData.differe = differeEl.value;
+      }
 
-      cardapioEditor.querySelectorAll('.cardapio-evento').forEach(el => {
-        const idx = parseInt(el.dataset.index);
-        if (cardapioData.dias[idx]) cardapioData.dias[idx].evento = el.value;
-      });
-      cardapioEditor.querySelectorAll('.cardapio-prato').forEach(el => {
-        const idx = parseInt(el.dataset.index);
-        const p = parseInt(el.dataset.p);
-        if (cardapioData.dias[idx]) cardapioData.dias[idx].pratos[p] = el.value;
-      });
+      if (cardapioDiasContainer) {
+        cardapioDiasContainer.querySelectorAll('.cardapio-evento').forEach(el => {
+          const idx = parseInt(el.dataset.index, 10);
+          if (cardapioData.dias[idx]) cardapioData.dias[idx].evento = el.value;
+        });
+        cardapioDiasContainer.querySelectorAll('.cardapio-prato').forEach(el => {
+          const idx = parseInt(el.dataset.index, 10);
+          const p = parseInt(el.dataset.p, 10);
+          if (cardapioData.dias[idx]) cardapioData.dias[idx].pratos[p] = el.value;
+        });
+      }
 
       try {
         const canvas = await drawCardapioCanvas(cardapioData);
@@ -739,11 +883,28 @@ document.addEventListener("DOMContentLoaded", () => {
             link.click();
           };
         }
+
+        const copyBtn = document.getElementById('copy-cardapio');
+        if (copyBtn) {
+          copyBtn.onclick = async () => {
+            try {
+              canvas.toBlob(async (blob) => {
+                if (!blob) return;
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                const origText = copyBtn.textContent;
+                copyBtn.textContent = 'Copiado! ✓';
+                setTimeout(() => { copyBtn.textContent = origText; }, 2000);
+              });
+            } catch (err) {
+              console.error('Erro ao copiar imagem:', err);
+              alert('Não foi possível copiar a imagem para a área de transferência.');
+            }
+          };
+        }
       } catch (err) {
         console.error('Erro na renderização do cardápio:', err);
         renderEl.innerHTML = `<div class="empty-state"><p>Erro ao gerar imagem do cardápio.</p></div>`;
       }
-
     } else if (toolName === 'ikanews') {
       const colaboradores = await getIkanewsColaboradoresData();
 

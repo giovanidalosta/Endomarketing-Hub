@@ -872,3 +872,162 @@ textarea {
   max-width: 260px;
   line-height: 1.5
 }
+/* ================================================================
+   Cardápio Semanal - Estilos Refinados (NutriSaúde UI)
+   ================================================================ */
+.editor-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.editor-card:hover {
+  border-color: rgba(9, 168, 201, 0.4);
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.card-title-row h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-dark);
+}
+
+/* Upload Dropzone */
+.dropzone {
+  border: 2px dashed var(--c-border);
+  background: var(--input-bg);
+  border-radius: var(--radius-sm);
+  padding: 1.4rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.dropzone:hover, .dropzone.drag-active {
+  border-color: var(--c-primary);
+  background: rgba(9, 168, 201, 0.08);
+}
+
+.dropzone-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--c-primary);
+  margin: 0 auto 8px;
+  opacity: 0.9;
+  display: block;
+}
+
+.dropzone p {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--c-dark);
+  margin-bottom: 2px;
+}
+
+.dropzone span {
+  font-size: 0.78rem;
+  color: var(--c-muted);
+}
+
+.dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+/* Helper link row */
+.helper-link-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: var(--c-primary);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  padding: 2px 4px;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+  color: var(--c-primary-hover);
+}
+
+/* Abas de Dias da Semana */
+.days-tabs-nav {
+  display: flex;
+  background: var(--input-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.day-tab-btn {
+  flex: 1;
+  padding: 7px 6px;
+  border: none;
+  background: transparent;
+  color: var(--c-muted);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.day-tab-btn:hover {
+  color: var(--c-dark);
+}
+
+.day-tab-btn.active {
+  background: var(--c-primary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(9, 168, 201, 0.35);
+}
+
+.day-form-pane {
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.day-form-pane.active {
+  display: flex;
+  animation: cardapioFadeIn 0.2s ease;
+}
+
+@keyframes cardapioFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
