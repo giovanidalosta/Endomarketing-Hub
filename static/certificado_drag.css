@@ -33,7 +33,8 @@
     transform-origin: top center;
     width: 1684px;
     height: 1190px;
-    /* We will set scale dynamically in JS based on container width */
+    flex-shrink: 0;
+    transition: transform 0.15s ease-out;
 }
 
 .cert-canvas {

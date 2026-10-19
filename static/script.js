@@ -873,6 +873,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const canvas = await drawCardapioCanvas(cardapioData);
         const dataUrl = canvas.toDataURL('image/png');
         renderEl.innerHTML = `<img src="${dataUrl}" alt="Cardápio Gerado" style="max-width: 100%; border-radius: 8px; box-shadow: var(--shadow-md);">`;
+        if (typeof window.applyCurrentZoom === 'function') window.applyCurrentZoom();
 
         if (exportBtn) {
           exportBtn.disabled = false;
@@ -920,6 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const canvas = await drawIkanewsCanvas(colaboradores);
         const dataUrl = canvas.toDataURL('image/png');
         renderEl.innerHTML = `<img src="${dataUrl}" alt="IKANEWS Gerado" style="max-width: 100%; border-radius: 8px; box-shadow: var(--shadow-md);">`;
+        if (typeof window.applyCurrentZoom === 'function') window.applyCurrentZoom();
 
         if (exportBtn) {
           exportBtn.disabled = false;

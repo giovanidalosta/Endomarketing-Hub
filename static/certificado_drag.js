@@ -30,13 +30,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const workspace = document.getElementById('cert-workspace');
     
     // Scale canvas to fit preview area
-    function resizeCanvas() {
+    function resizeCanvas(zoom) {
         if (!wrapper || !workspace) return;
-        const availableWidth = workspace.clientWidth - 40; // 40px padding
-        const scale = availableWidth / 1684;
+        const currentZoom = (typeof zoom === 'number') ? zoom : (window.currentHubZoom || 1.0);
+        const availableWidth = Math.max(300, workspace.clientWidth - 40); // 40px padding
+        const baseScale = availableWidth / 1684;
+        const scale = baseScale * currentZoom;
         wrapper.style.transform = `scale(${scale})`;
         wrapper.style.height = `${1190 * scale}px`;
+        
+        const scaledWidth = Math.round(1684 * scale);
+        if (scaledWidth > availableWidth) {
+            wrapper.style.transformOrigin = 'top left';
+            wrapper.style.marginLeft = '0';
+            wrapper.style.marginRight = 'auto';
+            workspace.style.justifyContent = 'flex-start';
+        } else {
+            wrapper.style.transformOrigin = 'top center';
+            wrapper.style.marginLeft = 'auto';
+            wrapper.style.marginRight = 'auto';
+            workspace.style.justifyContent = 'center';
+        }
     }
+    window.certResizeCanvas = resizeCanvas;
     
     window.addEventListener('resize', resizeCanvas);
     setTimeout(resizeCanvas, 100);

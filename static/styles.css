@@ -38,6 +38,7 @@
    Ikatec - Endomarketing Hub - Design System
    ================================================================ */
 :root {
+  color-scheme: light;
   /* Core Brand */
   --c-primary: #09A8C9;
   --c-light: #19CFF5;
@@ -74,6 +75,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --c-dark: #F4F7FE;
   --c-text: #E2E8F0;
   --c-bg: #0B111A;
@@ -132,6 +134,8 @@ body {
 .app-header__inner {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
@@ -145,6 +149,7 @@ body {
   font-weight: 700;
   color: #fff;
   letter-spacing: .03em;
+  flex-shrink: 0;
 }
 
 .header-logo {
@@ -153,11 +158,76 @@ body {
   padding-bottom: 5px;
 }
 
+/* Header Nav - Segmented Control */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 4px;
+  border-radius: 9999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.header-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.header-nav .nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.72);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  white-space: nowrap;
+}
+
+.header-nav .nav-btn svg {
+  opacity: 0.8;
+  transition: transform var(--transition), opacity var(--transition);
+  flex-shrink: 0;
+}
+
+.header-nav .nav-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.header-nav .nav-btn:hover svg {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.header-nav .nav-btn.active {
+  background: var(--c-primary);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(9, 168, 201, 0.45);
+}
+
+.header-nav .nav-btn.active svg {
+  opacity: 1;
+}
+
 /* Theme Toggle Switch */
 .theme-switch-wrapper {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .theme-switch-text {
@@ -215,11 +285,10 @@ input:checked + .theme-slider:before {
   transform: translateX(24px);
 }
 
-
-/* 3-Column Layout */
+/* 2-Column Layout (Formulário + Preview) */
 .layout {
   display: grid;
-  grid-template-columns: 260px 400px 1fr;
+  grid-template-columns: 440px 1fr;
   gap: 1.5rem;
   max-width: 1600px;
   margin: 0 auto;
@@ -243,7 +312,7 @@ input:checked + .theme-slider:before {
   transform: translateY(-2px);
 }
 
-/* 1. Sidebar Nav */
+/* Fallback Sidebar Nav (se necessário restaurar) */
 .panel--nav {
   display: flex;
   flex-direction: column;
@@ -425,12 +494,98 @@ textarea {
   box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
+  height: calc(100vh - 128px);
   max-height: calc(100vh - 128px);
   position: sticky;
   top: 96px;
-  padding: 2rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.preview-scroll-viewport {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 1.5rem;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.preview-scroll-viewport::-webkit-scrollbar,
+.panel--form::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.preview-scroll-viewport::-webkit-scrollbar-track,
+.panel--form::-webkit-scrollbar-track {
+  background: transparent;
+}
+.preview-scroll-viewport::-webkit-scrollbar-thumb,
+.panel--form::-webkit-scrollbar-thumb {
+  background: rgba(150, 160, 180, 0.25);
+  border-radius: 9999px;
+}
+.preview-scroll-viewport::-webkit-scrollbar-thumb:hover,
+.panel--form::-webkit-scrollbar-thumb:hover {
+  background: var(--c-primary);
+}
+
+.zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  padding: 4px 6px;
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow 0.2s, transform 0.2s;
+  user-select: none;
+}
+.zoom-controls:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.zoom-controls button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 10px;
+  font-weight: bold;
+  color: var(--c-text);
+  font-size: 1.2rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.zoom-controls button:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+[data-theme="dark"] .zoom-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.zoom-controls span {
+  font-size: 0.85rem;
+  padding: 4px 4px;
+  font-weight: 700;
+  color: var(--c-primary);
+  min-width: 48px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
 }
 
 .tool-preview {
@@ -440,13 +595,28 @@ textarea {
 .tool-preview.active {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   animation: fadeIn 0.4s ease;
+  min-width: 100%;
+  width: fit-content;
+}
+
+.preview-header-sticky {
+  width: 100%;
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background: var(--preview-bg);
+  padding-bottom: 0.5rem;
 }
 
 .panel__title--preview {
-  margin-bottom: 1.5rem;
-  align-self: center;
+  margin-bottom: 0;
   color: var(--c-dark);
   font-size: 1.15rem;
 }
@@ -458,6 +628,8 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  overflow: visible;
 }
 .generated-preview-wrapper img {
   max-width: 100%;
@@ -553,11 +725,16 @@ textarea {
 .a4-wrapper {
   display: flex;
   justify-content: center;
-  background: #CBD5E0;
-  padding: 2rem;
+  align-items: flex-start;
+  background: transparent;
+  padding: 1rem 0;
   border-radius: var(--radius-md);
   min-height: 400px;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* Agenda Document */
