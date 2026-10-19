@@ -11,16 +11,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Build the canvas
     renderCert.innerHTML = `
         <div class="cert-workspace" id="cert-workspace">
-            <div class="cert-canvas-wrapper" id="cert-wrapper">
-                <div class="cert-canvas" id="cert-canvas">
-                    <div id="cert-nome-txt" class="draggable-text" data-label="Nome" data-placeholder="Nome do Aluno">Nome do Aluno</div>
-                    <div id="cert-curso-txt" class="draggable-text" data-label="Curso" data-placeholder="Nome do Curso">Nome do Curso</div>
-                    <div id="cert-carga-txt" class="draggable-text" data-label="Carga Horária" data-placeholder="8h">Carga Horária</div>
-                    <div id="cert-data-txt" class="draggable-text" data-label="Conclusão" data-placeholder="01 de Outubro de 2026">Data de Conclusão</div>
-                    <div id="cert-tema-txt" class="draggable-text" data-label="Tema" data-placeholder="Tema do IKATED" style="display: none;">Tema</div>
-                    <div id="cert-apresentador-txt" class="draggable-text" data-label="Apresentador" data-placeholder="Nome do Apresentador" data-prefix="Ministrado por " style="display: none;">Ministrado por </div>
-                    <div id="snap-line-x" class="snap-line-x"></div>
-                    <div id="snap-line-y" class="snap-line-y"></div>
+            <div class="cert-scaler" id="cert-scaler">
+                <div class="cert-canvas-wrapper" id="cert-wrapper">
+                    <div class="cert-canvas" id="cert-canvas">
+                        <div id="cert-nome-txt" class="draggable-text" data-label="Nome" data-placeholder="Nome do Aluno">Nome do Aluno</div>
+                        <div id="cert-curso-txt" class="draggable-text" data-label="Curso" data-placeholder="Nome do Curso">Nome do Curso</div>
+                        <div id="cert-carga-txt" class="draggable-text" data-label="Carga Horária" data-placeholder="8h">Carga Horária</div>
+                        <div id="cert-data-txt" class="draggable-text" data-label="Conclusão" data-placeholder="01 de Outubro de 2026">Data de Conclusão</div>
+                        <div id="cert-tema-txt" class="draggable-text" data-label="Tema" data-placeholder="Tema do IKATED" style="display: none;">Tema</div>
+                        <div id="cert-apresentador-txt" class="draggable-text" data-label="Apresentador" data-placeholder="Nome do Apresentador" data-prefix="Ministrado por " style="display: none;">Ministrado por </div>
+                        <div id="snap-line-x" class="snap-line-x"></div>
+                        <div id="snap-line-y" class="snap-line-y"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -29,27 +31,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const wrapper = document.getElementById('cert-wrapper');
     const workspace = document.getElementById('cert-workspace');
     
-    // Scale canvas to fit preview area
+    // Scale canvas to fit preview area comfortably
     function resizeCanvas(zoom) {
         if (!wrapper || !workspace) return;
+        const scaler = document.getElementById('cert-scaler');
         const currentZoom = (typeof zoom === 'number') ? zoom : (window.currentHubZoom || 1.0);
-        const availableWidth = Math.max(300, workspace.clientWidth - 40); // 40px padding
-        const baseScale = availableWidth / 1684;
-        const scale = baseScale * currentZoom;
-        wrapper.style.transform = `scale(${scale})`;
-        wrapper.style.height = `${1190 * scale}px`;
         
+        // Find scroll viewport to measure available space
+        const viewport = document.getElementById('preview-scroll-viewport') || workspace.parentElement;
+        const availableWidth = viewport ? Math.max(300, viewport.clientWidth - 48) : Math.max(300, workspace.clientWidth - 40);
+        const availableHeight = viewport ? Math.max(360, viewport.clientHeight - 80) : 560;
+
+        // Base scale: fit within available width AND height at 100%, capped at 0.52 (~875px wide)
+        const scaleW = availableWidth / 1684;
+        const scaleH = availableHeight / 1190;
+        const baseScale = Math.min(scaleW, scaleH, 0.52);
+
+        const scale = +(baseScale * currentZoom).toFixed(4);
         const scaledWidth = Math.round(1684 * scale);
+        const scaledHeight = Math.round(1190 * scale);
+
+        wrapper.style.transform = `scale(${scale})`;
+        wrapper.style.transformOrigin = 'top left';
+        wrapper.style.width = '1684px';
+        wrapper.style.height = '1190px';
+
+        if (scaler) {
+            scaler.style.width = `${scaledWidth}px`;
+            scaler.style.height = `${scaledHeight}px`;
+        }
+
         if (scaledWidth > availableWidth) {
-            wrapper.style.transformOrigin = 'top left';
-            wrapper.style.marginLeft = '0';
-            wrapper.style.marginRight = 'auto';
             workspace.style.justifyContent = 'flex-start';
+            if (scaler) {
+                scaler.style.marginLeft = '0';
+                scaler.style.marginRight = 'auto';
+            }
         } else {
-            wrapper.style.transformOrigin = 'top center';
-            wrapper.style.marginLeft = 'auto';
-            wrapper.style.marginRight = 'auto';
             workspace.style.justifyContent = 'center';
+            if (scaler) {
+                scaler.style.marginLeft = 'auto';
+                scaler.style.marginRight = 'auto';
+            }
         }
     }
     window.certResizeCanvas = resizeCanvas;
@@ -972,7 +995,16 @@ function setupExportButtons() {
                 windowHeight: 1190,
                 onclone: (clonedDoc) => {
                     const clonedWrapper = clonedDoc.getElementById('cert-wrapper');
-                    if (clonedWrapper) clonedWrapper.style.transform = 'none';
+                    if (clonedWrapper) {
+                        clonedWrapper.style.transform = 'none';
+                        clonedWrapper.style.width = '1684px';
+                        clonedWrapper.style.height = '1190px';
+                    }
+                    const clonedScaler = clonedDoc.getElementById('cert-scaler');
+                    if (clonedScaler) {
+                        clonedScaler.style.width = '1684px';
+                        clonedScaler.style.height = '1190px';
+                    }
                     const clonedWorkspace = clonedDoc.getElementById('cert-workspace');
                     if (clonedWorkspace) {
                         clonedWorkspace.style.overflow = 'visible';

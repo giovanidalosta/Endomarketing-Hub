@@ -20,17 +20,26 @@
 
 .cert-workspace {
     width: 100%;
-    overflow: auto;
-    background: #e5e7eb;
+    overflow: visible;
+    background: transparent;
     border-radius: 8px;
-    padding: 20px;
+    padding: 10px 0;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+
+.cert-scaler {
+    position: relative;
+    flex-shrink: 0;
+    margin: 0 auto;
+    transition: width 0.15s ease-out, height 0.15s ease-out;
 }
 
 .cert-canvas-wrapper {
     /* Scale down for viewing, but keep internal dimensions */
-    transform-origin: top center;
+    transform-origin: top left;
     width: 1684px;
     height: 1190px;
     flex-shrink: 0;
@@ -45,6 +54,7 @@
     background-repeat: no-repeat;
     position: relative;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border-radius: 4px;
     overflow: hidden;
 }
 
