@@ -2,9 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Modify the preview HTML for the Certificate
     const renderCert = document.getElementById('render-certificado');
     if (!renderCert) return;
-    
+
     renderCert.style.display = 'block';
-    
+
     let isEditMode = false;
     let activePropsEl = null;
 
@@ -30,13 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const wrapper = document.getElementById('cert-wrapper');
     const workspace = document.getElementById('cert-workspace');
-    
+
     // Scale canvas to fit preview area comfortably
     function resizeCanvas(zoom) {
         if (!wrapper || !workspace) return;
         const scaler = document.getElementById('cert-scaler');
         const currentZoom = (typeof zoom === 'number') ? zoom : (window.currentHubZoom || 1.0);
-        
+
         // Find scroll viewport to measure available space
         const viewport = document.getElementById('preview-scroll-viewport') || workspace.parentElement;
         const availableWidth = viewport ? Math.max(300, viewport.clientWidth - 48) : Math.max(300, workspace.clientWidth - 40);
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     window.certResizeCanvas = resizeCanvas;
-    
+
     window.addEventListener('resize', resizeCanvas);
     setTimeout(resizeCanvas, 100);
 
@@ -95,12 +95,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Sync inputs to the text elements
     const inputs = {
-        'nome':        document.querySelector('#form-certificado [name="nome"]'),
-        'curso':       document.querySelector('#form-certificado [name="curso"]'),
-        'carga':       document.querySelector('#form-certificado [name="carga"]'),
-        'data':        document.querySelector('#form-certificado [name="data"]'),
-        'tema':        document.querySelector('#form-certificado [name="tema"]'),
-        'apresentador':document.querySelector('#form-certificado [name="apresentador"]')
+        'nome': document.querySelector('#form-certificado [name="nome"]'),
+        'curso': document.querySelector('#form-certificado [name="curso"]'),
+        'carga': document.querySelector('#form-certificado [name="carga"]'),
+        'data': document.querySelector('#form-certificado [name="data"]'),
+        'tema': document.querySelector('#form-certificado [name="tema"]'),
+        'apresentador': document.querySelector('#form-certificado [name="apresentador"]')
     };
 
     const texts = {
@@ -117,17 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const radiosMode = document.querySelectorAll('input[name="cert_mode"]');
     const lblModeLote = document.getElementById('lbl-mode-lote');
     const radioLote = document.getElementById('radio-mode-lote');
-    
+
     function createCustomField(fieldId, label, conf) {
         if (document.getElementById(`input-${fieldId}`)) return; // already exists
-        
+
         const divId = `cert-${fieldId}-txt`;
         const dynFields = document.getElementById('dynamic-fields-container');
         const group = document.createElement('div');
         group.className = 'field';
         group.innerHTML = `<label>${label}</label><textarea name="${fieldId}" id="input-${fieldId}" placeholder="Preencha o campo..." rows="1" style="resize: none; min-height: 42px; width: 100%;"></textarea>`;
         if (dynFields) dynFields.appendChild(group);
-        
+
         const canvasEl = document.getElementById('cert-canvas');
         const newText = document.createElement('div');
         newText.className = 'draggable-text cert-custom-field';
@@ -152,12 +152,12 @@ document.addEventListener("DOMContentLoaded", () => {
             newText.style.left = '400px';
             newText.style.fontSize = '50px'; // default
         }
-        
+
         // This will render it correctly based on datasets
         updateTextHtml(newText, label);
-        
+
         if (canvasEl) canvasEl.appendChild(newText);
-        
+
         const inp = document.getElementById(`input-${fieldId}`);
         if (inp) {
             inp.addEventListener('input', () => {
@@ -185,28 +185,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    window.getCertBgUrl = function(modelo) {
+    window.getCertBgUrl = function (modelo) {
         const customBg = localStorage.getItem(`cert_bg_${modelo}`);
         if (customBg) return customBg;
+        if (typeof window.CERT_BASE_DATA !== 'undefined' && window.CERT_BASE_DATA && window.CERT_BASE_DATA[modelo]) {
+            return window.CERT_BASE_DATA[modelo];
+        }
         return `static/certificado_base_${modelo}.png`;
     };
 
     function getCertConfigForModel(modelo) {
         const saved = localStorage.getItem(`cert_config_${modelo}`);
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) {}
+            try { return JSON.parse(saved); } catch (e) { }
         }
         return DEFAULT_CERT_CONFIGS[modelo] || {};
     }
 
     function loadConfigForModel() {
         const modelo = selModelo ? selModelo.value : 'alura';
-        
+
         // Clear previous custom fields from DOM
         document.querySelectorAll('.cert-custom-field').forEach(el => el.remove());
         const dynFields = document.getElementById('dynamic-fields-container');
         if (dynFields) dynFields.innerHTML = '';
-        
+
         const config = getCertConfigForModel(modelo);
         defaultConfig = config;
         Object.keys(texts).forEach(key => {
@@ -229,12 +232,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (conf.lineHeight) el.style.lineHeight = conf.lineHeight;
                 else el.style.lineHeight = 'normal';
                 if (conf.showLabel) el.dataset.showLabel = conf.showLabel;
-                
+
                 // Re-render HTML with new properties
                 updateTextHtml(el);
             }
         });
-        
+
         // Re-create custom fields
         Object.keys(config).forEach(k => {
             if (k.startsWith('cert-extra_')) {
@@ -252,15 +255,15 @@ document.addEventListener("DOMContentLoaded", () => {
     function addResizeHandles(el) {
         el.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
         if (!isEditMode || el !== activePropsEl) return;
-        
+
         const handleRight = document.createElement('div');
         handleRight.className = 'cert-resize-handle right';
         handleRight.onmousedown = (e) => initResize(e, el, 'right');
-        
+
         const handleLeft = document.createElement('div');
         handleLeft.className = 'cert-resize-handle left';
         handleLeft.onmousedown = (e) => initResize(e, el, 'left');
-        
+
         el.appendChild(handleRight);
         el.appendChild(handleLeft);
     }
@@ -268,13 +271,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function initResize(e, el, direction) {
         e.stopPropagation();
         e.preventDefault();
-        
+
         const startX = e.clientX;
         const startWidth = el.offsetWidth;
         const startLeft = el.offsetLeft;
         const wrapper = document.getElementById('cert-wrapper');
         const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
-        
+
         function onMouseMove(moveEvent) {
             const dx = (moveEvent.clientX - startX) / scale;
             if (direction === 'right') {
@@ -288,14 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 el.style.left = (startLeft + dxReal) + 'px';
             }
         }
-        
+
         function onMouseUp() {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
             const inputMaxWidth = document.getElementById('prop-max-width');
             if (inputMaxWidth) inputMaxWidth.value = parseInt(el.style.width);
         }
-        
+
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     }
@@ -307,18 +310,18 @@ document.addEventListener("DOMContentLoaded", () => {
             val = el.getAttribute('data-value') || el.getAttribute('data-placeholder') || el.getAttribute('data-label') || '';
         }
 
-        const prefix     = el.getAttribute('data-prefix') || '';
-        const label      = el.getAttribute('data-label') || 'CAMPO';
-        const showLabel  = el.dataset.showLabel === 'true';
+        const prefix = el.getAttribute('data-prefix') || '';
+        const label = el.getAttribute('data-label') || 'CAMPO';
+        const showLabel = el.dataset.showLabel === 'true';
         const labelColor = el.dataset.labelColor || '#08CFFF';
-        const displayed  = prefix + val;
+        const displayed = prefix + val;
 
         if (showLabel) {
             el.innerHTML = `<span style="display:block; font-size:40%; color:${labelColor}; text-transform:uppercase; margin-bottom: 5px; font-weight: bold; font-family: 'Exo-Regular', sans-serif;">${label}</span><span>${displayed}</span>`;
         } else {
             el.textContent = displayed;
         }
-        
+
         addResizeHandles(el);
     }
 
@@ -328,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Se o elemento tem data-prefix, o textContent inicial pode já conter o prefixo
             // (ex: "Ministrado por " ou "Carga horária: "). Precisamos armazenar só o valor puro.
             const elPrefix = texts[key].getAttribute('data-prefix') || '';
-            const rawText  = texts[key].textContent || '';
+            const rawText = texts[key].textContent || '';
             const pureText = (elPrefix && rawText.startsWith(elPrefix))
                 ? rawText.slice(elPrefix.length).trim()
                 : rawText.trim();
@@ -355,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     });
-    
+
     // Inputs/groups
     const grpNome = document.getElementById('group-nome');
     const grpCurso = document.getElementById('group-curso');
@@ -370,19 +373,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const modelo = selModelo.value;
         const modeInput = document.querySelector('input[name="cert_mode"]:checked');
         let mode = modeInput ? modeInput.value : 'unico';
-        
+
         const radioUnico = document.getElementById('radio-mode-unico');
-        
+
         if (modelo === 'alura') {
             if (mode === 'lote' && radioUnico) {
                 radioUnico.checked = true;
                 mode = 'unico';
             }
         }
-        
+
         const btnAddField = document.getElementById('btn-add-field');
         const dynFields = document.getElementById('dynamic-fields-container');
-        
+
         // Handle fields visibility
         if (modelo === 'alura') {
             grpCurso.style.display = 'block';
@@ -442,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (hintIkated) hintIkated.style.display = 'none';
             const cargaHintIkated = document.getElementById('carga-prefix-hint');
             if (cargaHintIkated) cargaHintIkated.style.display = 'none';
-            
+
             const apresLabel = grpApres.querySelector('label');
             if (apresLabel) apresLabel.innerHTML = 'Apresentador';
             inputs['apresentador'].placeholder = 'Ex: Giovani Freitas';
@@ -468,7 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lblModeLote.style.display = 'flex';
             lblModeLote.style.color = 'var(--c-fg)';
         }
-        
+
         const newMode = document.querySelector('input[name="cert_mode"]:checked').value;
         if (newMode === 'lote') {
             inputNomeUnico.style.display = 'none';
@@ -482,12 +485,12 @@ document.addEventListener("DOMContentLoaded", () => {
             texts['nome'].textContent = inputNomeUnico.value || texts['nome'].getAttribute('data-placeholder');
         }
 
-            const bgUrl = window.getCertBgUrl ? window.getCertBgUrl(modelo) : `static/certificado_base_${modelo}.png`;
-            canvasEl.style.backgroundImage = `url('${bgUrl}')`;
-        
+        const bgUrl = window.getCertBgUrl ? window.getCertBgUrl(modelo) : `static/certificado_base_${modelo}.png`;
+        canvasEl.style.backgroundImage = `url('${bgUrl}')`;
+
         applyEditMode();
     }
-    
+
     const btnToggleEdit = document.getElementById('btn-toggle-edit');
     if (btnToggleEdit) {
         btnToggleEdit.addEventListener('click', () => {
@@ -512,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const saveDefaultBtn = document.getElementById('save-default-certificado');
         const btnUploadBg = document.getElementById('btn-upload-bg');
         const propsPanel = document.getElementById('cert-props-panel');
-        
+
         if (isEditMode) {
             if (btnAddField) btnAddField.style.display = 'block';
             if (saveDefaultBtn) saveDefaultBtn.style.display = 'block';
@@ -543,38 +546,38 @@ document.addEventListener("DOMContentLoaded", () => {
     window.updateFormState = updateFormState;
     window.certResizeCanvas = resizeCanvas;
     window.certLoadConfig = loadConfigForModel;
-    
+
     let extraFieldsCount = 0;
     const btnAddField = document.getElementById('btn-add-field');
     const modalAdd = document.getElementById('modal-add-field');
     const modalInput = document.getElementById('modal-field-name');
     const modalCancel = document.getElementById('modal-btn-cancel');
     const modalConfirm = document.getElementById('modal-btn-confirm');
-    
+
     if (btnAddField && modalAdd) {
         btnAddField.addEventListener('click', () => {
             modalInput.value = '';
             modalAdd.style.display = 'flex';
             modalInput.focus();
         });
-        
+
         modalCancel.addEventListener('click', () => {
             modalAdd.style.display = 'none';
         });
-        
+
         const confirmField = () => {
             const label = modalInput.value.trim();
             if (!label) {
                 modalInput.focus();
                 return;
             }
-            
+
             modalAdd.style.display = 'none';
             extraFieldsCount = Date.now();
             const fieldId = `extra_${extraFieldsCount}`;
             createCustomField(fieldId, label);
         };
-        
+
         modalConfirm.addEventListener('click', confirmField);
         modalInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -598,18 +601,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function buildSnapTargets() {
         snapTargetsX = [1684 / 2]; // Center of canvas
         snapTargetsY = [1190 / 2]; // Center of canvas
-        
+
         document.querySelectorAll('.draggable-text').forEach(el => {
             if (el === activeEl) return;
             const rect = el.getBoundingClientRect();
             const canvasRect = document.getElementById('cert-canvas').getBoundingClientRect();
             const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
-            
+
             const left = (rect.left - canvasRect.left) / scale;
             const top = (rect.top - canvasRect.top) / scale;
             const width = rect.width / scale;
             const height = rect.height / scale;
-            
+
             snapTargetsX.push(left, left + width / 2, left + width);
             snapTargetsY.push(top, top + height / 2, top + height);
         });
@@ -656,7 +659,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         else delete el.dataset.labelColor;
                         if (saved.moved) el.dataset.moved = saved.moved;
                         else delete el.dataset.moved;
-                        
+
                         updateTextHtml(el);
                     }
                 });
@@ -675,7 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnAlignLeft = document.getElementById('prop-align-left');
     const btnAlignCenter = document.getElementById('prop-align-center');
     const btnAlignRight = document.getElementById('prop-align-right');
-    
+
     if (propsPanel) {
         if (inputFont) inputFont.addEventListener('change', (e) => {
             if (activePropsEl) activePropsEl.style.fontFamily = e.target.value;
@@ -701,12 +704,12 @@ document.addEventListener("DOMContentLoaded", () => {
             activePropsEl.style.textDecoration = isUnderline ? 'none' : 'underline';
             btnUnderline.classList.toggle('active', !isUnderline);
         });
-        
+
         if (inputColor) inputColor.addEventListener('input', (e) => {
             if (activePropsEl) activePropsEl.style.color = e.target.value;
             if (inputColorHex) inputColorHex.value = e.target.value;
         });
-        
+
         if (inputColorHex) {
             inputColorHex.addEventListener('input', (e) => {
                 let val = e.target.value.trim();
@@ -729,7 +732,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Object.entries(alignBtns).forEach(([align, btn]) => {
             if (btn) btn.addEventListener('click', () => {
                 if (!activePropsEl) return;
-                
+
                 // Get visual coordinates before changing
                 const rect = activePropsEl.getBoundingClientRect();
                 const canvasEl = document.getElementById('cert-canvas');
@@ -745,12 +748,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     newLeft = (rect.left - parentRect.left) / scale;
                 } else if (align === 'center') {
                     activePropsEl.style.transform = 'translateX(-50%)';
-                    newLeft = (rect.left + rect.width/2 - parentRect.left) / scale;
+                    newLeft = (rect.left + rect.width / 2 - parentRect.left) / scale;
                 } else if (align === 'right') {
                     activePropsEl.style.transform = 'translateX(-100%)';
                     newLeft = (rect.right - parentRect.left) / scale;
                 }
-                
+
                 activePropsEl.style.left = newLeft + 'px';
 
                 Object.values(alignBtns).forEach(b => b && b.classList.remove('active'));
@@ -787,27 +790,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener('mousedown', (e) => {
         if (!isEditMode) return;
-        
+
         const isPanelClick = e.target.closest('#cert-props-panel');
         const el = e.target.closest('.draggable-text');
-        
+
         if (!el && !isPanelClick) {
             document.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
             if (propsPanel) propsPanel.style.display = 'none';
             activePropsEl = null;
             return;
         }
-        
+
         if (isPanelClick) return; // let interactions with panel happen
-        
+
         // Element clicked, populate and show panel
         activePropsEl = el;
         document.querySelectorAll('.cert-resize-handle').forEach(h => h.remove());
         addResizeHandles(el);
-        
+
         if (propsPanel) {
             propsPanel.style.display = 'flex';
-            
+
             // Populate color
             let color = window.getComputedStyle(el).color;
             if (color.startsWith('rgb')) {
@@ -818,7 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             if (inputColor) inputColor.value = color;
             if (inputColorHex) inputColorHex.value = color;
-            
+
             // Populate size
             let size = window.getComputedStyle(el).fontSize;
             if (inputSize) {
@@ -837,7 +840,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 else if (fontFamily.toLowerCase().includes('courier')) fontVal = "'Courier New', monospace";
                 inputFont.value = fontVal;
             }
-            
+
             // Formatting buttons
             if (btnBold) btnBold.classList.toggle('active', window.getComputedStyle(el).fontWeight === 'bold' || parseInt(window.getComputedStyle(el).fontWeight) >= 700);
             if (btnItalic) btnItalic.classList.toggle('active', window.getComputedStyle(el).fontStyle === 'italic');
@@ -879,17 +882,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         }
-        
+
         historyStack.push(captureState());
         if (historyStack.length > 50) historyStack.shift();
 
         activeEl = el;
         activeEl.classList.add('dragging');
-        
+
         const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
         initialX = e.clientX;
         initialY = e.clientY;
-        
+
         if (el.id === 'cert-nome-txt' && !el.dataset.moved) {
             const rect = el.getBoundingClientRect();
             const canvasRect = document.getElementById('cert-canvas').getBoundingClientRect();
@@ -900,25 +903,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         startLeft = parseFloat(getComputedStyle(el).left);
         startTop = parseFloat(getComputedStyle(el).top);
-        
+
         buildSnapTargets();
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!activeEl) return;
-        
+
         const scale = parseFloat(wrapper.style.transform.replace('scale(', '').replace(')', '')) || 1;
-        
+
         let dx = (e.clientX - initialX) / scale;
         let dy = (e.clientY - initialY) / scale;
-        
+
         let newLeft = startLeft + dx;
         let newTop = startTop + dy;
-        
+
         const rect = activeEl.getBoundingClientRect();
         const elWidth = rect.width / scale;
         const elHeight = rect.height / scale;
-        
+
         let snappedX = false;
         let snappedY = false;
 
@@ -937,17 +940,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (Math.abs(newTop + elHeight / 2 - target) < SNAP_THRESHOLD) { newTop = target - elHeight / 2; snappedY = target; break; }
             if (Math.abs(newTop + elHeight - target) < SNAP_THRESHOLD) { newTop = target - elHeight; snappedY = target; break; }
         }
-        
+
         activeEl.style.left = `${newLeft}px`;
         activeEl.style.top = `${newTop}px`;
-        
+
         if (snappedX !== false) {
             snapLineX.style.left = `${snappedX}px`;
             snapLineX.style.display = 'block';
         } else {
             snapLineX.style.display = 'none';
         }
-        
+
         if (snappedY !== false) {
             snapLineY.style.top = `${snappedY}px`;
             snapLineY.style.display = 'block';
@@ -965,159 +968,318 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-function setupExportButtons() {
-    const btnZip = document.getElementById('btn-baixar-cert');
-    const btnPdf = document.getElementById('btn-baixar-cert-pdf');
-    
-    const handler = (format) => {
-        const btn = format === 'pdf' ? btnPdf : btnZip;
-        const orig = btn.innerHTML;
-        btn.innerHTML = 'Gerando...';
-        btn.disabled = true;
+    function setupExportButtons() {
+        const btnZip = document.getElementById('btn-baixar-cert');
+        const btnPdf = document.getElementById('btn-baixar-cert-pdf');
 
-        const mode = document.querySelector('input[name="cert_mode"]:checked').value;
-        const modelo = selModelo ? selModelo.value : 'alura';
-        
-        let temaText = document.querySelector('#form-certificado [name="tema"]').value.trim();
-        let temaWords = temaText ? temaText.replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).slice(0, 3).join('_') : modelo;
-        let baseName = `Certificados_${temaWords}`;
+        function renderCanvasNative(canvasEl, bgSrc) {
+            return new Promise((resolve) => {
+                const outCanvas = document.createElement('canvas');
+                outCanvas.width = 1684;
+                outCanvas.height = 1190;
+                const ctx = outCanvas.getContext('2d');
 
-        const canvasEl = document.getElementById('cert-canvas');
-        
-        const generateCanvas = () => {
-            return html2canvas(canvasEl, {
-                scale: 1, 
-                useCORS: true,
-                backgroundColor: null,
-                width: 1684,
-                height: 1190,
-                windowWidth: 1684,
-                windowHeight: 1190,
-                onclone: (clonedDoc) => {
-                    const clonedWrapper = clonedDoc.getElementById('cert-wrapper');
-                    if (clonedWrapper) {
-                        clonedWrapper.style.transform = 'none';
-                        clonedWrapper.style.width = '1684px';
-                        clonedWrapper.style.height = '1190px';
-                    }
-                    const clonedScaler = clonedDoc.getElementById('cert-scaler');
-                    if (clonedScaler) {
-                        clonedScaler.style.width = '1684px';
-                        clonedScaler.style.height = '1190px';
-                    }
-                    const clonedWorkspace = clonedDoc.getElementById('cert-workspace');
-                    if (clonedWorkspace) {
-                        clonedWorkspace.style.overflow = 'visible';
-                        clonedWorkspace.style.padding = '0';
-                        clonedWorkspace.style.margin = '0';
-                        clonedWorkspace.style.display = 'block';
-                    }
-                    const clonedCanvas = clonedDoc.getElementById('cert-canvas');
-                    if (clonedCanvas) {
-                        clonedCanvas.style.boxShadow = 'none';
-                        clonedCanvas.style.margin = '0';
-                    }
+                const proceed = () => {
+                    const textElements = canvasEl.querySelectorAll('.draggable-text');
+                    textElements.forEach(el => {
+                        if (el.style.display === 'none') return;
+
+                        const computed = window.getComputedStyle(el);
+                        const text = el.innerText || el.textContent || '';
+                        if (!text.trim()) return;
+
+                        let x = 0;
+                        if (el.style.left && el.style.left.includes('%')) {
+                            x = (parseFloat(el.style.left) / 100) * 1684;
+                        } else {
+                            x = parseFloat(el.style.left) || el.offsetLeft || 0;
+                        }
+                        let y = parseFloat(el.style.top) || el.offsetTop || 0;
+
+                        const fontWeight = el.style.fontWeight || computed.fontWeight || 'normal';
+                        const fontStyle = el.style.fontStyle || computed.fontStyle || 'normal';
+                        const fontSizePx = parseFloat(el.style.fontSize) || parseFloat(computed.fontSize) || 40;
+                        const fontFamily = el.style.fontFamily || computed.fontFamily || "'Exo-Regular', sans-serif";
+
+                        ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+                        ctx.fillStyle = el.style.color || computed.color || '#ffffff';
+                        ctx.textBaseline = 'top';
+
+                        const transform = el.style.transform || computed.transform || '';
+                        const isCentered = transform.includes('translateX(-50%)') || computed.textAlign === 'center';
+                        ctx.textAlign = isCentered ? 'center' : (computed.textAlign || 'left');
+
+                        let lineHeightPx = fontSizePx * 1.2;
+                        if (el.style.lineHeight) {
+                            const parsedLh = parseFloat(el.style.lineHeight);
+                            if (!isNaN(parsedLh)) {
+                                lineHeightPx = parsedLh > 5 ? parsedLh : fontSizePx * parsedLh;
+                            }
+                        }
+
+                        const maxWidth = parseFloat(el.style.maxWidth) || parseFloat(computed.maxWidth) || 0;
+                        const lines = text.split('\n');
+
+                        let currentY = y;
+                        lines.forEach(lineText => {
+                            if (maxWidth > 0 && ctx.measureText(lineText).width > maxWidth) {
+                                const words = lineText.split(' ');
+                                let currentLine = '';
+                                for (const word of words) {
+                                    const testLine = currentLine ? `${currentLine} ${word}` : word;
+                                    if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+                                        ctx.fillText(currentLine, x, currentY);
+                                        currentY += lineHeightPx;
+                                        currentLine = word;
+                                    } else {
+                                        currentLine = testLine;
+                                    }
+                                }
+                                if (currentLine) {
+                                    ctx.fillText(currentLine, x, currentY);
+                                    currentY += lineHeightPx;
+                                }
+                            } else {
+                                ctx.fillText(lineText, x, currentY);
+                                currentY += lineHeightPx;
+                            }
+                        });
+                    });
+
+                    resolve(outCanvas);
+                };
+
+                if (bgSrc) {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        try {
+                            ctx.drawImage(img, 0, 0, 1684, 1190);
+                        } catch (e) {
+                            console.warn('Falha no drawImage do fundo:', e);
+                        }
+                        proceed();
+                    };
+                    img.onerror = () => {
+                        console.warn('Erro ao carregar fundo:', bgSrc);
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(0, 0, 1684, 1190);
+                        proceed();
+                    };
+                    img.src = bgSrc;
+                } else {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(0, 0, 1684, 1190);
+                    proceed();
                 }
             });
-        };
+        }
 
-        if (mode === 'lote') {
-            const rawNames = document.getElementById('input-nome-lote').value;
-            const nomes = rawNames.split('\n').map(n => n.trim()).filter(n => n);
-            
-            if (nomes.length === 0) {
-                alert('Lista de nomes vazia.');
+        const handler = async (format) => {
+            const btn = format === 'pdf' ? btnPdf : btnZip;
+            if (!btn) return;
+            const orig = btn.innerHTML;
+            btn.innerHTML = 'Gerando...';
+            btn.disabled = true;
+
+            const modeInput = document.querySelector('input[name="cert_mode"]:checked');
+            const mode = modeInput ? modeInput.value : 'unico';
+            const modelo = selModelo ? selModelo.value : 'alura';
+
+            const temaEl = document.querySelector('#form-certificado [name="tema"]') || document.getElementById('tema-input');
+            let temaText = temaEl ? temaEl.value.trim() : '';
+            let temaWords = temaText ? temaText.replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).slice(0, 3).join('_') : modelo;
+            let baseName = `Certificados_${temaWords || 'Certificado'}`;
+
+            const canvasEl = document.getElementById('cert-canvas');
+            if (!canvasEl) {
+                alert('Elemento do certificado não encontrado.');
                 btn.innerHTML = orig;
                 btn.disabled = false;
                 return;
             }
-            
-            if (format === 'zip' && typeof JSZip === 'undefined') {
-                alert('Erro: Biblioteca JSZip não carregada. Tente recarregar a página.');
-                btn.innerHTML = orig;
-                btn.disabled = false;
-                return;
-            }
-            
-            btn.innerHTML = 'Gerando Lote...';
-            
-            let zip = format === 'zip' ? new JSZip() : null;
-            let folder = zip ? zip.folder(baseName) : null;
-            let pdf = format === 'pdf' ? new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'px', format: [1684, 1190] }) : null;
-            
-            let p = Promise.resolve();
-            const originalName = texts['nome'].getAttribute('data-value') || texts['nome'].textContent;
-            
-            nomes.forEach((nomeAluno, index) => {
-                p = p.then(() => {
-                    btn.innerHTML = `Gerando ${index + 1}/${nomes.length}...`;
-                    updateTextHtml(texts['nome'], nomeAluno);
-                    return new Promise(resolve => setTimeout(resolve, 100));
-                }).then(() => {
-                    return generateCanvas();
-                }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    if (format === 'zip') {
-                        const base64Data = imgData.replace(/^data:image\/(png|jpg);base64,/, "");
-                        folder.file(`Certificado_${nomeAluno}.png`, base64Data, {base64: true});
-                    } else if (format === 'pdf') {
-                        if (index > 0) pdf.addPage([1684, 1190], 'landscape');
-                        pdf.addImage(imgData, 'PNG', 0, 0, 1684, 1190);
+
+            const generateCanvas = async () => {
+                const bgUrl = window.getCertBgUrl ? window.getCertBgUrl(modelo) : `static/certificado_base_${modelo}.png`;
+
+                // Try html2canvas with an isolated clone
+                try {
+                    if (typeof html2canvas === 'undefined') {
+                        throw new Error('html2canvas não carregado');
                     }
-                });
-            });
-            
-            p.then(() => {
-                updateTextHtml(texts['nome'], originalName);
-                if (format === 'zip') {
-                    btn.innerHTML = 'Compactando ZIP...';
-                    return zip.generateAsync({type:"blob"}).then(content => {
+                    const canvas = await html2canvas(canvasEl, {
+                        scale: 1,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        width: 1684,
+                        height: 1190,
+                        x: 0,
+                        y: 0,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: 1684,
+                        windowHeight: 1190,
+                        onclone: (clonedDoc) => {
+                            const clonedCanvas = clonedDoc.getElementById('cert-canvas');
+                            if (!clonedCanvas) return;
+
+                            clonedDoc.body.innerHTML = '';
+                            clonedDoc.body.style.margin = '0';
+                            clonedDoc.body.style.padding = '0';
+                            clonedDoc.body.style.background = 'transparent';
+                            clonedDoc.body.style.overflow = 'hidden';
+                            clonedDoc.body.style.width = '1684px';
+                            clonedDoc.body.style.height = '1190px';
+
+                            clonedCanvas.style.position = 'absolute';
+                            clonedCanvas.style.top = '0';
+                            clonedCanvas.style.left = '0';
+                            clonedCanvas.style.transform = 'none';
+                            clonedCanvas.style.width = '1684px';
+                            clonedCanvas.style.height = '1190px';
+                            clonedCanvas.style.margin = '0';
+                            clonedCanvas.style.boxShadow = 'none';
+                            clonedCanvas.style.borderRadius = '0';
+                            clonedCanvas.style.backgroundImage = `url('${bgUrl}')`;
+
+                            clonedCanvas.querySelectorAll('.snap-line-x, .snap-line-y, .cert-resize-handle').forEach(el => el.remove());
+
+                            clonedCanvas.querySelectorAll('.draggable-text').forEach(el => {
+                                el.style.border = 'none';
+                                el.style.background = 'transparent';
+                                el.style.outline = 'none';
+                                el.classList.remove('dragging');
+                            });
+
+                            clonedDoc.body.appendChild(clonedCanvas);
+                        }
+                    });
+                    return canvas;
+                } catch (err) {
+                    console.warn('html2canvas falhou, usando renderizador Canvas nativo fallback:', err);
+                    return await renderCanvasNative(canvasEl, bgUrl);
+                }
+            };
+
+            try {
+                if (mode === 'lote') {
+                    const inputLote = document.getElementById('input-nome-lote');
+                    const rawNames = inputLote ? inputLote.value : '';
+                    const nomes = rawNames.split('\n').map(n => n.trim()).filter(n => n);
+
+                    if (nomes.length === 0) {
+                        alert('A lista de nomes para geração em lote está vazia.');
+                        btn.innerHTML = orig;
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    if (format === 'zip' && typeof JSZip === 'undefined') {
+                        alert('Erro: Biblioteca JSZip não carregada. Recarregue a página.');
+                        btn.innerHTML = orig;
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    const JsPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+                    if (format === 'pdf' && !JsPDF) {
+                        alert('Erro: Biblioteca jsPDF não carregada. Recarregue a página.');
+                        btn.innerHTML = orig;
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    btn.innerHTML = 'Gerando Lote...';
+
+                    let zip = format === 'zip' ? new JSZip() : null;
+                    let folder = zip ? zip.folder(baseName) : null;
+                    let pdf = format === 'pdf' ? new JsPDF({ orientation: 'landscape', unit: 'px', format: [1684, 1190] }) : null;
+
+                    const certNomeEl = texts['nome'] || document.getElementById('cert-nome-txt');
+                    const originalName = certNomeEl ? (certNomeEl.getAttribute('data-value') || certNomeEl.textContent) : '';
+
+                    for (let index = 0; index < nomes.length; index++) {
+                        const nomeAluno = nomes[index];
+                        btn.innerHTML = `Gerando ${index + 1}/${nomes.length}...`;
+                        if (certNomeEl) updateTextHtml(certNomeEl, nomeAluno);
+                        await new Promise(resolve => setTimeout(resolve, 80));
+
+                        const canvas = await generateCanvas();
+                        const imgData = canvas.toDataURL('image/png');
+                        const cleanAluno = (nomeAluno || 'Aluno').replace(/[\r\n\t]/g, ' ').replace(/[<>:"/\\|?*]/g, '').trim() || `Aluno_${index + 1}`;
+
+                        if (format === 'zip') {
+                            const base64Data = imgData.replace(/^data:image\/(png|jpg);base64,/, "");
+                            folder.file(`Certificado_${cleanAluno}.png`, base64Data, { base64: true });
+                        } else if (format === 'pdf') {
+                            if (index > 0) pdf.addPage([1684, 1190], 'landscape');
+                            pdf.addImage(imgData, 'PNG', 0, 0, 1684, 1190);
+                        }
+                    }
+
+                    if (certNomeEl) updateTextHtml(certNomeEl, originalName);
+
+                    if (format === 'zip') {
+                        btn.innerHTML = 'Compactando ZIP...';
+                        const content = await zip.generateAsync({ type: "blob" });
                         const url = window.URL.createObjectURL(content);
                         const link = document.createElement('a');
                         link.href = url;
                         link.download = `${baseName}.zip`;
+                        document.body.appendChild(link);
                         link.click();
-                        window.URL.revokeObjectURL(url);
-                    });
-                } else if (format === 'pdf') {
-                    btn.innerHTML = 'Gerando PDF...';
-                    pdf.save(`${baseName}.pdf`);
-                }
-            }).catch(err => {
-                alert('Erro na geração: ' + err.message);
-            }).finally(() => {
-                updateTextHtml(texts['nome'], originalName);
-                btn.innerHTML = orig;
-                btn.disabled = false;
-            });
-
-        } else {
-            // UNICO
-            generateCanvas().then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const nomeAluno = inputs['nome'] ? inputs['nome'].value : 'Gerado';
-                
-                if (format === 'zip') { // Single format PNG
-                    const link = document.createElement('a');
-                    link.download = `Certificado_${nomeAluno}.png`;
-                    link.href = imgData;
-                    link.click();
+                        setTimeout(() => {
+                            window.URL.revokeObjectURL(url);
+                            if (link.parentNode) link.parentNode.removeChild(link);
+                        }, 5000);
+                    } else if (format === 'pdf') {
+                        btn.innerHTML = 'Salvando PDF...';
+                        pdf.save(`${baseName}.pdf`);
+                    }
                 } else {
-                    const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'px', format: [1684, 1190] });
-                    pdf.addImage(imgData, 'PNG', 0, 0, 1684, 1190);
-                    pdf.save(`Certificado_${nomeAluno}.pdf`);
+                    // Modo ÚNICO
+                    const canvas = await generateCanvas();
+                    const imgData = canvas.toDataURL('image/png');
+                    const rawNome = inputs['nome'] ? inputs['nome'].value : '';
+                    const cleanNome = (rawNome || 'Aluno').replace(/[\r\n\t]/g, ' ').replace(/[<>:"/\\|?*]/g, '').trim() || 'Aluno';
+
+                    if (format === 'zip') { // Formato PNG
+                        const link = document.createElement('a');
+                        link.download = `Certificado_${cleanNome}.png`;
+                        link.href = imgData;
+                        document.body.appendChild(link);
+                        link.click();
+                        setTimeout(() => {
+                            if (link.parentNode) link.parentNode.removeChild(link);
+                        }, 500);
+                    } else { // Formato PDF
+                        const JsPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+                        if (!JsPDF) {
+                            throw new Error('Biblioteca jsPDF não carregada. Verifique se o script jspdf está disponível.');
+                        }
+                        const pdf = new JsPDF({ orientation: 'landscape', unit: 'px', format: [1684, 1190] });
+                        pdf.addImage(imgData, 'PNG', 0, 0, 1684, 1190);
+                        pdf.save(`Certificado_${cleanNome}.pdf`);
+                    }
                 }
-            }).finally(() => {
+            } catch (err) {
+                console.error('Erro ao gerar certificado:', err);
+                alert('Não foi possível gerar o certificado: ' + (err.message || err));
+            } finally {
+                const certNomeEl = texts['nome'] || document.getElementById('cert-nome-txt');
+                if (certNomeEl && inputs['nome']) {
+                    updateTextHtml(certNomeEl, inputs['nome'].value || certNomeEl.getAttribute('data-placeholder'));
+                }
                 btn.innerHTML = orig;
                 btn.disabled = false;
-            });
-        }
-    };
+            }
+        };
 
-    if (btnZip) btnZip.onclick = () => handler('zip');
-    if (btnPdf) btnPdf.onclick = () => handler('pdf');
-}
-setupExportButtons();
+        if (btnZip) btnZip.onclick = () => handler('zip');
+        if (btnPdf) btnPdf.onclick = () => handler('pdf');
+    }
+    setupExportButtons();
 
 
     const saveDefaultBtn = document.getElementById('save-default-certificado');
@@ -1161,11 +1323,11 @@ setupExportButtons();
     const inputUploadBg = document.getElementById('upload-bg-certificado');
     if (btnUploadBg && inputUploadBg) {
         btnUploadBg.onclick = () => inputUploadBg.click();
-        
+
         inputUploadBg.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+
             btnUploadBg.textContent = 'Carregando...';
             const modelo = selModelo ? selModelo.value : 'alura';
             const reader = new FileReader();

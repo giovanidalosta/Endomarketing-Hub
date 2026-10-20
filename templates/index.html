@@ -14,8 +14,11 @@
   <link rel="stylesheet" href="static/certificado_drag.css?v=5">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>window.html2canvas || document.write('<script src="static/html2canvas.min.js"><\/script>')</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>window.jspdf || document.write('<script src="static/jspdf.umd.min.js"><\/script>')</script>
   <script src="static/jszip.min.js"></script>
+  <script src="static/cert_base_data.js"></script>
 </head>
 <body>
   <header class="app-header">
@@ -462,7 +465,7 @@
 
   <script src="static/script_clean.js?v=2"></script>
   <script src="static/script.js?v=4"></script>
-  <script src="static/certificado_drag.js?v=25"></script>
+  <script src="static/certificado_drag.js?v=26"></script>
   <script>
     function certPickModel(modelo) {
       // Update hidden input
