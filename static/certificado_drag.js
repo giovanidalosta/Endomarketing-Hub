@@ -485,8 +485,11 @@ document.addEventListener("DOMContentLoaded", () => {
             texts['nome'].textContent = inputNomeUnico.value || texts['nome'].getAttribute('data-placeholder');
         }
 
-        const bgUrl = window.getCertBgUrl ? window.getCertBgUrl(modelo) : `static/certificado_base_${modelo}.png`;
-        canvasEl.style.backgroundImage = `url('${bgUrl}')`;
+        const canvasEl = document.getElementById('cert-canvas');
+        if (canvasEl) {
+            const bgUrl = window.getCertBgUrl ? window.getCertBgUrl(modelo) : `static/certificado_base_${modelo}.png`;
+            canvasEl.style.backgroundImage = `url('${bgUrl}')`;
+        }
 
         applyEditMode();
     }
